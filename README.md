@@ -12,7 +12,7 @@ artifacts and consumed with Bicep module aliases.
 ### naming
 
 Composes Azure resource names from an array of naming segments
-(project, environment, region, component, ...), enforcing per-resource-type
+(workload, environment, region, component, ...), enforcing per-resource-type
 rules automatically: hyphens vs compact join, lower case, and maximum name
 length. Type abbreviations follow the Cloud Adoption Framework; region
 abbreviations cover every Azure region. See the
@@ -86,7 +86,7 @@ core segments:
 
 ```bicep
 // main.bicep
-var namingContext = { project: project, environment: environment, region: location }
+var namingContext = { workload: workload, environment: environment, region: location }
 
 module api 'modules/api.bicep' = {
   name: naming.resourceNameFrom('resource_group', namingContext, ['api'])
@@ -106,9 +106,11 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 }
 ```
 
-Context keys, in order and all optional: `organization`, `project`,
-`environment`, `region`, `component`. See the
-[module README](modules/naming/README.md) for the full API.
+Context keys, in order and all optional: `organization`, `workload`,
+`environment`, `region`, `component`. Keep resource names workload-centric —
+the Cloud Adoption Framework puts organization and team structure in management
+groups, subscriptions, and tags rather than in resource names; see the
+[module README](modules/naming/README.md) for the full rationale and API.
 
 ## Layout
 

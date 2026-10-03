@@ -149,7 +149,7 @@ def emit_bicep(rules, region_codes):
         'func applyLengthLimit(type resourceType, name string) string =>',
         '  take(name, nameRules[type].max ?? 255)',
         '',
-        "@description('Composes a resource name that complies with the rules of the resource type: the type abbreviation followed by the naming segments (typically project, environment, region, component, in any number), hyphen delimited when the type allows hyphens, lower cased when the type requires it, and truncated to the type name limit when needed. Any segment naming an Azure region (`uksouth`, `UK South`) is abbreviated to its short form (`uks`). Pass only the segments you need; empty segments are dropped.')",
+        "@description('Composes a resource name that complies with the rules of the resource type: the type abbreviation followed by the naming segments (typically workload, environment, region, component, in any number), hyphen delimited when the type allows hyphens, lower cased when the type requires it, and truncated to the type name limit when needed. Any segment naming an Azure region (`uksouth`, `UK South`) is abbreviated to its short form (`uks`). Pass only the segments you need; empty segments are dropped.')",
         '@export()',
         'func resourceName(type resourceType, segments string[]) string =>',
         '  applyLengthLimit(type, applyCase(type, rawName(type, segments)))',
@@ -159,18 +159,18 @@ def emit_bicep(rules, region_codes):
         'func compactResourceName(type resourceType, segments string[]) string =>',
         "  applyLengthLimit(type, applyCase(type, replace(rawName(type, segments), '-', '')))",
         '',
-        "@description('Converts a naming context object into ordered naming segments, for defining the core segments once (for example project, environment, region) and passing them down to nested modules. Context keys, all optional and in this order: `organization`, `project`, `environment`, `region`, `component`. The `region` key accepts any Azure region form (`uksouth`, `uk-south`, `UK South`) and is abbreviated; missing or empty keys are dropped.')",
+        "@description('Converts a naming context object into ordered naming segments, for defining the core segments once (for example workload, environment, region) and passing them down to nested modules. Context keys, all optional and in this order: `organization`, `workload`, `environment`, `region`, `component`. The `region` key accepts any Azure region form (`uksouth`, `uk-south`, `UK South`) and is abbreviated; missing or empty keys are dropped.')",
         '@export()',
         'func segmentsFrom(context object) string[] =>',
         '  filter([',
         "    trim(context.organization ?? '')",
-        "    trim(context.project ?? '')",
+        "    trim(context.workload ?? '')",
         "    trim(context.environment ?? '')",
         "    regionCode(trim(context.region ?? ''))",
         "    trim(context.component ?? '')",
         "  ], (segment) => segment != '')",
         '',
-        "@description('Composes a compliant resource name from a naming context object plus any extra segments appended after the context segments (typically the component for that resource). `context` uses the keys of `segmentsFrom` (`organization`, `project`, `environment`, `region`, `component`, all optional); `extraSegments` may be empty. Define the context once at the top level and pass it to nested modules, which then name their resources without repeating the core segments.')",
+        "@description('Composes a compliant resource name from a naming context object plus any extra segments appended after the context segments (typically the component for that resource). `context` uses the keys of `segmentsFrom` (`organization`, `workload`, `environment`, `region`, `component`, all optional); `extraSegments` may be empty. Define the context once at the top level and pass it to nested modules, which then name their resources without repeating the core segments.')",
         '@export()',
         'func resourceNameFrom(type resourceType, context object, extraSegments string[]) string =>',
         '  resourceName(type, concat(segmentsFrom(context), extraSegments))',
@@ -224,10 +224,35 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {{
 ```
 
 Every function takes an **array of segments** in your convention's order
-(project, environment, region, component, whatever you use). Segments are
+(workload, environment, region, component, whatever you use). Segments are
 trimmed, empty segments dropped, and any segment that names an Azure region is
 abbreviated automatically (`uksouth` or `UK South` -> `uks`). The type
 abbreviation is prepended automatically.
+
+## Which segments should you use?
+
+Follow the Cloud Adoption Framework
+[naming components](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming):
+`type - workload/application/project - environment - region - instance`. The
+workload is the primary segment; it is what the resource belongs to.
+
+Resist putting an organization hierarchy (organization, team, OU-like
+structures) into resource names:
+
+- **Names are permanent.** Most Azure resource names can't be changed after
+  creation, and CAF's first rule is to include only information that remains
+  constant. Teams and org structures reorganize; workloads don't.
+- **The hierarchy is carried by scope.** Management groups and subscriptions
+  model your organization; the resource group and subscription a resource sits
+  in already identify the owning org and team. CAF only uses the organization
+  in subscription-level names (for example `<org>-<workload>-<env>`).
+- **Names have hard length limits.** Storage accounts allow 24 characters;
+  every segment burns budget that the workload needs.
+
+Capture team and other mutable ownership details in **resource tags** instead.
+Keep the optional `organization` context key for its narrow legitimate use:
+disambiguating globally-scoped names (storage accounts, web apps) in estates
+where multiple organizations share an Azure Active Directory tenant.
 
 ## Naming context for nested modules
 
@@ -237,12 +262,12 @@ segments.
 
 ```bicep
 // main.bicep
-param project string = 'contoso'
+param workload string = 'contoso'
 param environment string = 'demo'
 param location string = 'uksouth'
 
 var namingContext = {{
-  project: project
+  workload: workload
   environment: environment
   region: location
 }}
@@ -265,7 +290,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {{
 }}
 ```
 
-Context keys, in order and all optional: `organization`, `project`,
+Context keys, in order and all optional: `organization`, `workload`,
 `environment`, `region`, `component`. `segmentsFrom(context)` returns the
 ordered segment array when you need it directly.
 
@@ -276,7 +301,7 @@ ordered segment array when you need it directly.
 | `resourceName(type, segments string[])` | Compliant name for the type: hyphens when allowed, compact when not, lower case when required, truncated to the type's maximum length. |
 | `compactResourceName(type, segments string[])` | Same, but always compact (hyphens stripped). |
 | `resourceNameFrom(type, context object, extraSegments string[])` | As `resourceName`, building the leading segments from a naming context object; `extraSegments` (may be empty) are appended after the context segments. |
-| `segmentsFrom(context object)` | Ordered segments for a naming context object (`organization`, `project`, `environment`, `region`, `component`, all optional; region abbreviated). |
+| `segmentsFrom(context object)` | Ordered segments for a naming context object (`organization`, `workload`, `environment`, `region`, `component`, all optional; region abbreviated). |
 | `resourceAbbreviation(type)` | The Cloud Adoption Framework abbreviation for the type (`resource_group` -> `rg`). |
 | `regionCode(region)` | Short abbreviation for an Azure region (`westeurope`/`West Europe` -> `euw`); unknown values pass through unchanged. |
 | `resourceNameMaxLength(type)` | Maximum name length allowed for the type (255 when undocumented). |
