@@ -1,0 +1,77 @@
+name: Publish Bicep modules
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Module version tag (e.g. 1.0.0)'
+        required: true
+        default: '0.0.1'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bicep CLI
+        run: |
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x bicep
+          sudo mv bicep /usr/local/bin/bicep
+          bicep --version
+
+      - name: Check generated module is up to date
+        run: |
+          python3 scripts/generate.py
+          git diff --exit-code -- modules/naming/
+
+      - name: Lint naming module
+        run: bicep lint modules/naming/naming.bicep
+
+      - name: Build test template and verify naming functions
+        run: |
+          bicep build tests/naming.test.bicep --outfile /tmp/naming.test.json
+          python3 tests/verify.py /tmp/naming.test.json
+
+  publish:
+    needs: validate
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bicep CLI
+        run: |
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x bicep
+          sudo mv bicep /usr/local/bin/bicep
+          bicep --version
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve version
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=${{ inputs.version }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Publish naming module
+        run: |
+          bicep publish modules/naming/naming.bicep \
+            --target "br:ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/bicep-modules/naming:$VERSION" \
+            --documentationUri "https://github.com/${GITHUB_REPOSITORY}/tree/main/modules/naming"

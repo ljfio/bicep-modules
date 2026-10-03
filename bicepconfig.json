@@ -1,0 +1,6 @@
+{
+  "experimentalFeaturesEnabled": {
+    "userDefinedFunctions": true,
+    "ociEnabled": true
+  }
+}

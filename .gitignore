@@ -1,0 +1,5 @@
+# compiled ARM templates
+*.json.tmp
+
+# Bicep temp files
+*.bicep.sgtmp

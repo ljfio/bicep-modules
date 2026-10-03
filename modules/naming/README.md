@@ -1,0 +1,718 @@
+# naming
+
+Bicep function library that composes Azure resource names which comply with the
+naming rules of each resource type.
+
+- Type abbreviations come from the
+  [Cloud Adoption Framework recommendations](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations).
+- Per-type rules (length, hyphens, casing) come from the
+  [Azure resource naming rules](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-name-rules)
+  via the [Azure Verified Naming Utility](https://github.com/Azure/terraform-azure-avm-utl-naming)
+  catalog, cross-checked against the [Azure Periodic Table](https://www.azureperiodictable.com/)
+  and [AZNames-bicep](https://github.com/francesco-sodano/AZNames-bicep).
+- Region abbreviations follow the
+  [claranet region naming standard](https://github.com/claranet/terraform-azurerm-regions).
+
+## Usage
+
+```bicep
+import * as naming from 'br/ljfio:naming:0.1.0'
+
+var segments = ['contoso', 'demo', 'uksouth', 'shared']
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: naming.resourceName('storage_account', segments)
+  // -> stcontosodemouksshared (compact + lowercase: storage forbids hyphens)
+}
+
+resource webApp 'Microsoft.Web/sites@2023-12-01' = {
+  name: naming.resourceName('site_web_app', segments)
+  // -> app-contoso-demo-uks-shared (hyphens allowed, case preserved)
+}
+```
+
+Every function takes an **array of segments** in your convention's order
+(project, environment, region, component, whatever you use). Segments are
+trimmed, empty segments dropped, and any segment that names an Azure region is
+abbreviated automatically (`uksouth` or `UK South` -> `uks`). The type
+abbreviation is prepended automatically.
+
+## Functions
+
+| Function | Description |
+|---|---|
+| `resourceName(type, segments string[])` | Compliant name for the type: hyphens when allowed, compact when not, lower case when required, truncated to the type's maximum length. |
+| `compactResourceName(type, segments string[])` | Same, but always compact (hyphens stripped). |
+| `resourceAbbreviation(type)` | The Cloud Adoption Framework abbreviation for the type (`resource_group` -> `rg`). |
+| `regionCode(region)` | Short abbreviation for an Azure region (`westeurope`/`West Europe` -> `euw`); unknown values pass through unchanged. |
+| `resourceNameMaxLength(type)` | Maximum name length allowed for the type (255 when undocumented). |
+
+## Compliance behaviour
+
+- Types that forbid hyphens (storage accounts, Analysis Services, ...) are
+  joined without a separator automatically; types that allow them are joined
+  with `-`.
+- Types that require lower case (storage accounts, ...) are lower cased
+  automatically.
+- Names longer than the type's documented maximum are truncated from the end.
+  Keep segments short; truncation is deterministic but can make two long names
+  collide.
+
+## Region abbreviations
+
+| Region | AZ CLI name | Abbreviation | Paired region |
+|---|---|---|---|
+| East Asia | `eastasia` | `asea` | asse |
+| Southeast Asia | `southeastasia` | `asse` | asea |
+| Australia Central 2 | `australiacentral2` | `auc2` | auc |
+| Australia Central | `australiacentral` | `auc` | auc2 |
+| Australia East | `australiaeast` | `aue` | ause |
+| Australia Southeast | `australiasoutheast` | `ause` | aue |
+| Brazil South | `brazilsouth` | `brs` | ussc |
+| Brazil Southeast | `brazilsoutheast` | `brse` | brs |
+| Canada Central | `canadacentral` | `cac` | cae |
+| Canada East | `canadaeast` | `cae` | cac |
+| China East 2 | `chinaeast2` | `cne2` | cnn2 |
+| China East 3 | `chinaeast3` | `cne3` | cnn3 |
+| China East | `chinaeast` | `cne` | cnn |
+| China North 2 | `chinanorth2` | `cnn2` | cne2 |
+| China North 3 | `chinanorth3` | `cnn3` | cne3 |
+| China North | `chinanorth` | `cnn` | cne |
+| North Europe | `northeurope` | `eun` | euw |
+| West Europe | `westeurope` | `euw` | eun |
+| France Central | `francecentral` | `frc` | frs |
+| France South | `francesouth` | `frs` | frc |
+| Germany Central | `germanycentral` | `gce` |  |
+| Germany Northeast | `germanynortheast` | `gne` |  |
+| Germany North | `germanynorth` | `gno` | gwc |
+| Germany West Central | `germanywestcentral` | `gwc` | gno |
+| Central India | `centralindia` | `inc` | ins |
+| South India | `southindia` | `ins` | inc |
+| West India | `westindia` | `inw` | ins |
+| Israel Central | `israelcentral` | `ilc` |  |
+| Italy North | `italynorth` | `itn` |  |
+| Japan East | `japaneast` | `jpe` | jpw |
+| Japan West | `japanwest` | `jpw` | jpe |
+| Korea Central | `koreacentral` | `krc` | krs |
+| Korea South | `koreasouth` | `krs` | krc |
+| Norway East | `norwayeast` | `noe` | now |
+| Norway West | `norwaywest` | `now` | noe |
+| New Zealand North | `newzealandnorth` | `nzn` |  |
+| Poland Central | `polandcentral` | `polc` |  |
+| Qatar Central | `qatarcentral` | `qatc` |  |
+| South Africa North | `southafricanorth` | `san` | saw |
+| South Africa West | `southafricawest` | `saw` | san |
+| Sweden Central | `swedencentral` | `swec` | swes |
+| Sweden South | `swedensouth` | `swes` | swec |
+| Switzerland North | `switzerlandnorth` | `swn` | sww |
+| Switzerland West | `switzerlandwest` | `sww` | swn |
+| UAE Central | `uaecentral` | `uaec` | uaen |
+| UAE North | `uaenorth` | `uaen` | uaec |
+| UK South | `uksouth` | `uks` | ukw |
+| UK West | `ukwest` | `ukw` | uks |
+| Central US | `centralus` | `usc` | use2 |
+| East US 2 | `eastus2` | `use2` | usc |
+| East US | `eastus` | `use` | usw |
+| North Central US | `northcentralus` | `usnc` | ussc |
+| South Central US | `southcentralus` | `ussc` | usnc |
+| West US 2 | `westus2` | `usw2` | uswc |
+| West US 3 | `westus3` | `usw3` | use |
+| West Central US | `westcentralus` | `uswc` | usw2 |
+| West US | `westus` | `usw` | use |
+| Asia Pacific | `asiapacific` | `apac` |  |
+| Australia | `australia` | `aus` |  |
+| Brazil | `brazil` | `bra` |  |
+| Canada | `canada` | `can` |  |
+| Europe | `europe` | `eu` |  |
+| India | `india` | `ind` |  |
+| Japan | `japan` | `jap` |  |
+| Korea | `korea` | `kor` |  |
+| Norway | `norway` | `nor` |  |
+| New Zealand | `newzealand` | `nz` |  |
+| Singapore | `singapore` | `sgp` |  |
+| Sweden | `sweden` | `swe` |  |
+| United States | `unitedstates` | `us` |  |
+
+## Supported resource types
+
+| Type key | ARM resource type | Abbreviation | Max length | Hyphens | Lower case |
+|---|---|---|---|---|---|
+| `access_connector` | Microsoft.Databricks/accessConnectors | `dbac` | 30 | no | yes |
+| `account_ai_services` | Microsoft.CognitiveServices/accounts | `aif` | 64 | yes | no |
+| `account_cognitive_services` | Microsoft.CognitiveServices/accounts | `ais` | 64 | yes | no |
+| `account_compute_policy` | Microsoft.DataLakeAnalytics/accounts/computePolicies | `account-compute-policy` | 60 | yes | no |
+| `account_computer_vision` | Microsoft.CognitiveServices/accounts | `cv` | 64 | yes | no |
+| `account_content_moderator` | Microsoft.CognitiveServices/accounts | `cm` | 64 | yes | no |
+| `account_content_safety` | Microsoft.CognitiveServices/accounts | `cs` | 64 | yes | no |
+| `account_custom_vision_prediction` | Microsoft.CognitiveServices/accounts | `cstv` | 64 | yes | no |
+| `account_custom_vision_training` | Microsoft.CognitiveServices/accounts | `cstvt` | 64 | yes | no |
+| `account_data_lake_store_account` | Microsoft.DataLakeAnalytics/accounts/dataLakeStoreAccounts | `dlslink` | 24 | no | yes |
+| `account_face` | Microsoft.CognitiveServices/accounts | `face` | 64 | yes | no |
+| `account_form_recognizer` | Microsoft.CognitiveServices/accounts | `di` | 64 | yes | no |
+| `account_health_insights` | Microsoft.CognitiveServices/accounts | `hi` | 64 | yes | no |
+| `account_immersive_reader` | Microsoft.CognitiveServices/accounts | `ir` | 64 | yes | no |
+| `account_open_ai` | Microsoft.CognitiveServices/accounts | `oai` | 64 | yes | no |
+| `account_project` | Microsoft.CognitiveServices/accounts/projects | `proj` | &mdash; | no | yes |
+| `account_speech_services` | Microsoft.CognitiveServices/accounts | `spch` | 64 | yes | no |
+| `account_storage_account` | Microsoft.DataLakeAnalytics/accounts/storageAccounts | `account-storage-account` | 60 | yes | no |
+| `account_text_analytics` | Microsoft.CognitiveServices/accounts | `lang` | 64 | yes | no |
+| `account_text_translation` | Microsoft.CognitiveServices/accounts | `trsl` | 64 | yes | no |
+| `account_virtual_network_rule` | Microsoft.DataLakeStore/accounts/virtualNetworkRules | `account-virtual-network-rule` | 50 | yes | no |
+| `action_group` | Microsoft.Insights/actionGroups | `ag` | 260 | no | yes |
+| `action_rule` | Microsoft.AlertsManagement/actionRules | `apr` | 260 | no | yes |
+| `activity_log_alert` | Microsoft.Insights/activityLogAlerts | `activitylogalert` | 260 | no | yes |
+| `advanced_threat_protection_setting` | Microsoft.Security/advancedThreatProtectionSettings | `advancedthreatprotectionsetting` | &mdash; | no | yes |
+| `alerts_suppression_rule` | Microsoft.Security/alertsSuppressionRules | `alerts-suppression-rule` | 260 | yes | no |
+| `analysis_services_server` | Microsoft.AnalysisServices/servers | `as` | 63 | no | yes |
+| `api_management_service` | Microsoft.ApiManagement/service | `apim` | 50 | yes | no |
+| `app_job` | Microsoft.App/jobs | `caj` | 32 | no | yes |
+| `application_gateway` | Microsoft.Network/applicationGateways | `agw` | 80 | yes | no |
+| `application_gateway_web_application_firewall_policy` | Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies | `waf` | 80 | no | yes |
+| `application_group` | Microsoft.DesktopVirtualization/applicationGroups | `vdag` | 64 | yes | no |
+| `application_security_group` | Microsoft.Network/applicationSecurityGroups | `asg` | 80 | yes | no |
+| `assessment` | Microsoft.Security/assessments | `assessment` | 260 | yes | no |
+| `assessment_metadata` | Microsoft.Security/assessmentMetadata | `assessment-metadata` | 260 | yes | no |
+| `assessment_project` | Microsoft.Migrate/assessmentProjects | `migr` | &mdash; | no | yes |
+| `association` | Microsoft.CustomProviders/associations | `association` | 180 | no | yes |
+| `auto_provisioning_setting` | Microsoft.Security/autoProvisioningSettings | `auto-provisioning-setting` | 260 | yes | no |
+| `auto_scale_setting` | Microsoft.Insights/autoScaleSettings | `mas` | 260 | no | yes |
+| `automation` | Microsoft.Security/automations | `automation` | 260 | yes | no |
+| `automation_account` | Microsoft.Automation/automationAccounts | `aa` | 50 | yes | no |
+| `automation_account_certificate` | Microsoft.Automation/automationAccounts/certificates | `aacert` | 128 | no | yes |
+| `automation_account_connection` | Microsoft.Automation/automationAccounts/connections | `automationaccountconnection` | 128 | no | yes |
+| `automation_account_credential` | Microsoft.Automation/automationAccounts/credentials | `aacred` | 128 | no | yes |
+| `automation_account_runbook` | Microsoft.Automation/automationAccounts/runbooks | `aarb` | 63 | yes | no |
+| `automation_account_schedule` | Microsoft.Automation/automationAccounts/schedules | `aasched` | 128 | no | yes |
+| `automation_account_variable` | Microsoft.Automation/automationAccounts/variables | `aavar` | 128 | no | yes |
+| `automation_account_watcher` | Microsoft.Automation/automationAccounts/watchers | `automation-account-watcher` | 63 | yes | no |
+| `automation_account_webhook` | Microsoft.Automation/automationAccounts/webhooks | `automationaccountwebhook` | 128 | no | yes |
+| `availability_set` | Microsoft.Compute/availabilitySets | `avail` | 80 | yes | no |
+| `azure_firewall` | Microsoft.Network/azureFirewalls | `afw` | 80 | yes | no |
+| `backup_vault` | Microsoft.DataProtection/backupVaults | `bvault` | 50 | yes | no |
+| `backup_vault_backup_policy` | Microsoft.DataProtection/backupVaults/backupPolicies | `bkpol` | 75 | yes | no |
+| `backupvault_backup_instance` | Microsoft.DataProtection/backupvaults/backupInstances | `backupvault-backup-instance` | 75 | yes | no |
+| `bare_metal_machine` | Microsoft.NetworkCloud/bareMetalMachines | `baremetalmachine` | 64 | no | no |
+| `bare_metal_machine_key_set` | Microsoft.NetworkCloud/bareMetalMachineKeySets | `bare-metal-machine-key-set` | 30 | yes | no |
+| `bastion_host` | Microsoft.Network/bastionHosts | `bas` | 80 | yes | no |
+| `batch_account` | Microsoft.Batch/batchAccounts | `ba` | 24 | no | yes |
+| `batch_account_application` | Microsoft.Batch/batchAccounts/applications | `baapp` | 64 | yes | no |
+| `batch_account_certificate` | Microsoft.Batch/batchAccounts/certificates | `bacert` | 45 | yes | no |
+| `batch_account_pool` | Microsoft.Batch/batchAccounts/pools | `bapool` | 64 | yes | no |
+| `blob` | Microsoft.Storage/blob | `blob` | 1024 | no | yes |
+| `blockchain_member` | Microsoft.Blockchain/blockchainMembers | `blockchainmember` | 20 | no | yes |
+| `blueprint` | Microsoft.Blueprint/blueprint | `blueprint` | 90 | yes | no |
+| `blueprint_assignment` | Microsoft.Blueprint/blueprintAssignments | `blueprint-assignment` | 90 | yes | no |
+| `bmc_key_set` | Microsoft.NetworkCloud/bmcKeySets | `bmc-key-set` | 30 | yes | no |
+| `bot_service_azurebot` | Microsoft.BotService/botServices | `bot` | 64 | yes | no |
+| `bot_service_channel` | Microsoft.BotService/botServices/channels | `bot-service-channel` | 64 | yes | no |
+| `bot_service_channel_direct_line` | Microsoft.BotService/botServices/channels | `botline` | 64 | yes | no |
+| `bot_service_channel_email` | Microsoft.BotService/botServices/channels | `botmail` | 64 | yes | no |
+| `bot_service_channel_ms_teams` | Microsoft.BotService/botServices/channels | `botteams` | 64 | yes | no |
+| `bot_service_channel_slack` | Microsoft.BotService/botServices/channels | `botslack` | 64 | yes | no |
+| `bot_service_channels_registration` | Microsoft.BotService/botServices | `botchan` | 64 | yes | no |
+| `bot_service_connection` | Microsoft.BotService/botServices/Connections | `botcon` | 64 | yes | no |
+| `budget` | Microsoft.Consumption/budgets | `budget` | 63 | yes | no |
+| `certificate` | Microsoft.Web/certificates | `certificate` | 260 | no | yes |
+| `certificate_order` | Microsoft.CertificateRegistration/certificateOrders | `certificateorder` | 50 | no | no |
+| `cloud_service` | Microsoft.Compute/cloudServices | `cld` | &mdash; | no | yes |
+| `cloud_services_network` | Microsoft.NetworkCloud/cloudServicesNetworks | `cloud-services-network` | 30 | yes | no |
+| `cluster_database` | Microsoft.Kusto/clusters/databases | `dedb` | 260 | yes | no |
+| `cluster_database_data_connection` | Microsoft.Kusto/clusters/databases/dataConnections | `cluster-database-data-connection` | 40 | yes | no |
+| `cluster_database_data_connection_event_hub` | Microsoft.Kusto/clusters/databases/dataConnections | `kehc` | 40 | yes | no |
+| `cluster_database_eventhubconnection` | Microsoft.Kusto/clusters/databases/eventhubconnections | `cluster-database-eventhubconnection` | 40 | yes | no |
+| `cluster_h_base` | Microsoft.HDInsight/clusters | `hbase` | 59 | yes | no |
+| `cluster_hadoop` | Microsoft.HDInsight/clusters | `hadoop` | 59 | yes | no |
+| `cluster_interactive_query` | Microsoft.HDInsight/clusters | `iqr` | 59 | yes | no |
+| `cluster_kafka` | Microsoft.HDInsight/clusters | `kafka` | 59 | yes | no |
+| `cluster_manager` | Microsoft.NetworkCloud/clusterManagers | `cluster-manager` | 30 | yes | no |
+| `cluster_metrics_configuration` | Microsoft.NetworkCloud/clusters/metricsConfigurations | `clustermetricsconfiguration` | &mdash; | no | yes |
+| `cluster_ml_services` | Microsoft.HDInsight/clusters | `mls` | 59 | yes | no |
+| `cluster_rserver` | Microsoft.HDInsight/clusters | `rsv` | 59 | yes | no |
+| `cluster_spark` | Microsoft.HDInsight/clusters | `spark` | 59 | yes | no |
+| `cluster_storm` | Microsoft.HDInsight/clusters | `storm` | 59 | yes | no |
+| `cognitive_services_account` | Microsoft.CognitiveServices/accounts | `cog` | 64 | yes | no |
+| `commitment_plan` | Microsoft.MachineLearning/commitmentPlans | `commitmentplan` | 260 | no | yes |
+| `communication_service` | Microsoft.Communication/communicationServices | `acs` | 63 | yes | no |
+| `community` | Microsoft.Mission/communities | `cmt` | &mdash; | no | yes |
+| `community_community_endpoint` | Microsoft.Mission/communities/communityEndpoints | `ce` | &mdash; | no | yes |
+| `community_dedicated_hub` | Microsoft.Mission/communities/dedicatedHubs | `dh` | &mdash; | no | yes |
+| `community_transit_hub` | Microsoft.Mission/communities/transitHubs | `th` | &mdash; | no | yes |
+| `component` | Microsoft.Insights/components | `appi` | 260 | no | yes |
+| `compute_virtual_machine` | Microsoft.Compute/virtualMachines | `vm` | 64 | yes | no |
+| `configuration_store` | Microsoft.AppConfiguration/configurationStores | `appcs` | 50 | yes | no |
+| `configuration_store_replica` | Microsoft.AppConfiguration/configurationStores/replicas | `configurationstorereplica` | &mdash; | no | yes |
+| `connected_cluster` | Microsoft.Kubernetes/connectedClusters | `arck` | &mdash; | no | yes |
+| `connection` | Microsoft.Network/connections | `con` | 80 | yes | no |
+| `connector` | Microsoft.Security/connectors | `connector` | 260 | yes | no |
+| `container_app` | Microsoft.App/containerApps | `ca` | 32 | yes | yes |
+| `container_group` | Microsoft.ContainerInstance/containerGroups | `ci` | 63 | yes | yes |
+| `container_service_managed_cluster` | Microsoft.ContainerService/managedClusters | `aks` | 63 | yes | no |
+| `cosmosdb_cassandra_cluster` | Microsoft.DocumentDB/cassandraClusters | `mcc` | 44 | yes | no |
+| `cosmosdb_cassandra_datacenter` | Microsoft.DocumentDB/cassandraClusters/dataCenters | `mcdc` | 44 | yes | no |
+| `dashboard` | Microsoft.Portal/dashboards | `dsb` | 160 | yes | no |
+| `data_box_job` | Microsoft.DataBox/jobs | `data-box-job` | 24 | yes | no |
+| `data_collection_endpoint` | Microsoft.Insights/dataCollectionEndpoints | `dce` | 64 | no | yes |
+| `data_collection_rule` | Microsoft.Insights/dataCollectionRules | `dcr` | 64 | no | yes |
+| `data_collection_rule_association` | Microsoft.Insights/dataCollectionRuleAssociations | `dcra` | &mdash; | no | yes |
+| `data_lake_analytics_account` | Microsoft.DataLakeAnalytics/accounts | `dla` | 24 | no | yes |
+| `data_lake_analytics_account_firewall_rule` | Microsoft.DataLakeAnalytics/accounts/firewallRules | `dlfw` | 50 | yes | no |
+| `data_lake_store_account` | Microsoft.DataLakeStore/accounts | `dls` | 24 | no | yes |
+| `data_lake_store_account_firewall_rule` | Microsoft.DataLakeStore/accounts/firewallRules | `dlsfw` | 50 | yes | no |
+| `data_migration_service` | Microsoft.DataMigration/services | `dms` | 62 | yes | no |
+| `database_account` | Microsoft.DocumentDB/databaseAccounts | `cosmos` | 44 | yes | yes |
+| `database_account_cosmos_db_for_apache_cassandra_account` | Microsoft.DocumentDB/databaseAccounts | `coscas` | 44 | yes | yes |
+| `database_account_cosmos_db_for_apache_gremlin_account` | Microsoft.DocumentDB/databaseAccounts | `cosgrm` | 44 | yes | yes |
+| `database_account_cosmos_db_for_mongo_db_account` | Microsoft.DocumentDB/databaseAccounts | `cosmon` | 44 | yes | yes |
+| `database_account_cosmos_db_for_no_sql_account` | Microsoft.DocumentDB/databaseAccounts | `cosno` | 44 | yes | yes |
+| `database_account_cosmos_db_for_table_account` | Microsoft.DocumentDB/databaseAccounts | `costab` | 44 | yes | yes |
+| `database_account_sql_database` | Microsoft.DocumentDB/databaseAccounts/sqlDatabases | `cosmos` | &mdash; | no | yes |
+| `databricks_cluster` |  | `dbc` | 30 | yes | no |
+| `databricks_high_concurrency_cluster` |  | `dbhcc` | 30 | yes | no |
+| `databricks_standard_cluster` |  | `dbsc` | 30 | yes | no |
+| `databricks_workspace` | Microsoft.Databricks/workspaces | `dbw` | 64 | yes | no |
+| `db_for_maria_db_server` | Microsoft.DBforMariaDB/servers | `maria` | 63 | yes | yes |
+| `db_for_maria_db_server_database` | Microsoft.DBforMariaDB/servers/databases | `mariadb` | 63 | yes | no |
+| `db_for_maria_db_server_firewall_rule` | Microsoft.DBforMariaDB/servers/firewallRules | `mariafw` | 128 | yes | no |
+| `db_for_maria_db_server_virtual_network_rule` | Microsoft.DBforMariaDB/servers/virtualNetworkRules | `mariavn` | 128 | yes | no |
+| `db_for_my_sql_server` | Microsoft.DBforMySQL/servers | `mysql` | 63 | yes | yes |
+| `db_for_my_sql_server_database` | Microsoft.DBforMySQL/servers/databases | `mysqldb` | 63 | yes | no |
+| `db_for_my_sql_server_firewall_rule` | Microsoft.DBforMySQL/servers/firewallRules | `mysqlfw` | 128 | yes | no |
+| `db_for_my_sql_server_virtual_network_rule` | Microsoft.DBforMySQL/servers/virtualNetworkRules | `mysqlvn` | 128 | yes | no |
+| `db_for_postgre_sql_server` | Microsoft.DBforPostgreSQL/servers | `psql` | 63 | yes | yes |
+| `db_for_postgre_sql_server_database` | Microsoft.DBforPostgreSQL/servers/databases | `psqldb` | 63 | yes | no |
+| `db_for_postgre_sql_server_firewall_rule` | Microsoft.DBforPostgreSQL/servers/firewallRules | `psqlfw` | 128 | yes | no |
+| `db_for_postgre_sql_server_virtual_network_rule` | Microsoft.DBforPostgreSQL/servers/virtualNetworkRules | `psqlvn` | 128 | yes | no |
+| `deployment` | Microsoft.Resources/deployments | `ts` | 64 | yes | no |
+| `deployment_script` | Microsoft.Resources/deploymentScripts | `script` | &mdash; | no | yes |
+| `deployment_template_deployment` | Microsoft.Resources/deployments | `deploy` | 64 | yes | no |
+| `desktop_virtualization_workspace` | Microsoft.DesktopVirtualization/workspaces | `vdws` | 64 | yes | no |
+| `dev_test_lab_lab` | Microsoft.DevTestLab/labs | `lab` | 50 | yes | no |
+| `device_security_group` | Microsoft.Security/deviceSecurityGroups | `device-security-group` | 260 | yes | no |
+| `digital_twins_instance` | Microsoft.DigitalTwins/digitalTwinsInstances | `dt` | &mdash; | no | yes |
+| `disk` | Microsoft.Compute/disks | `dsk` | 80 | yes | no |
+| `disk_access` | Microsoft.Compute/diskAccesses | `da` | 80 | yes | no |
+| `disk_encryption_set` | Microsoft.Compute/diskEncryptionSets | `des` | 80 | yes | no |
+| `disk_managed_disk_data` | Microsoft.Compute/disks | `disk` | 80 | yes | no |
+| `disk_managed_disk_o` | Microsoft.Compute/disks | `osdisk` | 80 | yes | no |
+| `dns_a_record` | Microsoft.Network/dnsZones/A | `dnsrec` | 80 | yes | no |
+| `dns_aaaa_record` | Microsoft.Network/dnsZones/AAAA | `dnsrec` | 80 | yes | no |
+| `dns_caa_record` | Microsoft.Network/dnsZones/CAA | `dnsrec` | 80 | yes | no |
+| `dns_cname_record` | Microsoft.Network/dnsZones/CNAME | `dnsrec` | 80 | yes | no |
+| `dns_forwarding_ruleset` | Microsoft.Network/dnsForwardingRulesets | `dnsfrs` | 80 | yes | no |
+| `dns_mx_record` | Microsoft.Network/dnsZones/MX | `dnsrec` | 80 | yes | no |
+| `dns_ns_record` | Microsoft.Network/dnsZones/NS | `dnsrec` | 80 | yes | no |
+| `dns_ptr_record` | Microsoft.Network/dnsZones/PTR | `dnsrec` | 80 | yes | no |
+| `dns_resolver` | Microsoft.Network/dnsResolvers | `dnspr` | 80 | yes | no |
+| `dns_resolver_inbound_endpoint` | Microsoft.Network/dnsResolvers/inboundEndpoints | `in` | 80 | yes | no |
+| `dns_resolver_outbound_endpoint` | Microsoft.Network/dnsResolvers/outboundEndpoints | `out` | 80 | yes | no |
+| `dns_txt_record` | Microsoft.Network/dnsZones/TXT | `dnsrec` | 80 | yes | no |
+| `dns_zone` | Microsoft.Network/dnsZones | `dns` | 63 | no | yes |
+| `domain` | Microsoft.EventGrid/domains | `evgd` | 50 | yes | no |
+| `domain_topic` | Microsoft.EventGrid/domains/topics | `evgt` | 50 | yes | no |
+| `edge_cluster` | Microsoft.NetworkCloud/edgeClusters | `edge-cluster` | 30 | yes | no |
+| `edge_cluster_node` | Microsoft.NetworkCloud/edgeClusters/nodes | `edgeclusternode` | 64 | no | no |
+| `elastic_san` | Microsoft.ElasticSan/elasticSans | `elastic-san` | 24 | yes | yes |
+| `elastic_san_volume_group` | Microsoft.ElasticSan/elasticSans/volumeGroups | `elastic-san-volume-group` | 63 | yes | yes |
+| `enclave_connection` | Microsoft.Mission/enclaveConnections | `ec` | &mdash; | no | yes |
+| `enterprise_channel` | Microsoft.BotService/enterpriseChannels | `enterprise-channel` | 64 | yes | no |
+| `environment` | Microsoft.TimeSeriesInsights/environments | `tsi` | 90 | no | yes |
+| `environment_access_policy` | Microsoft.TimeSeriesInsights/environments/accessPolicies | `environmentaccesspolicy` | 90 | no | yes |
+| `environment_event_source` | Microsoft.TimeSeriesInsights/environments/eventSources | `environmenteventsource` | 90 | no | yes |
+| `environment_reference_data_set` | Microsoft.TimeSeriesInsights/environments/referenceDataSets | `environmentreferencedataset` | 63 | no | no |
+| `event_grid_namespace` | Microsoft.EventGrid/namespaces | `evgns` | 50 | no | yes |
+| `event_hub_cluster` | Microsoft.EventHub/clusters | `evhcl` | 50 | yes | no |
+| `event_hub_namespace` | Microsoft.EventHub/namespaces | `evhns` | 50 | yes | no |
+| `event_hub_namespace_authorization_rule` | Microsoft.EventHub/namespaces/AuthorizationRules | `ehnar` | 50 | yes | no |
+| `event_hub_namespace_disaster_recovery_config` | Microsoft.EventHub/namespaces/disasterRecoveryConfigs | `ehdr` | 50 | yes | no |
+| `event_subscription` | Microsoft.EventGrid/eventSubscriptions | `evgs` | 64 | yes | no |
+| `express_route_circuit` | Microsoft.Network/expressRouteCircuits | `erc` | 80 | yes | no |
+| `express_route_gateway` | Microsoft.Network/expressRouteGateways | `ergw` | 80 | yes | no |
+| `express_route_port` | Microsoft.Network/expressRoutePorts | `erd` | &mdash; | no | yes |
+| `fabric_capacity` | Microsoft.Fabric/capacities | `fc` | 63 | no | yes |
+| `factory` | Microsoft.DataFactory/factories | `adf` | 63 | yes | no |
+| `factory_dataflow` | Microsoft.DataFactory/factories/dataflows | `factorydataflow` | 260 | no | yes |
+| `factory_dataset` | Microsoft.DataFactory/factories/datasets | `factorydataset` | 260 | no | yes |
+| `factory_dataset_mysql_table` | Microsoft.DataFactory/factories/datasets | `adfmysql` | 260 | no | yes |
+| `factory_dataset_postgresql_table` | Microsoft.DataFactory/factories/datasets | `adfpsql` | 260 | no | yes |
+| `factory_dataset_sql_server_table` | Microsoft.DataFactory/factories/datasets | `adfmssql` | 260 | no | yes |
+| `factory_integration_runtime` | Microsoft.DataFactory/factories/integrationRuntimes | `factory-integration-runtime` | 63 | yes | no |
+| `factory_integration_runtime_azure_ssis` | Microsoft.DataFactory/factories/integrationRuntimes | `adfir` | 63 | yes | no |
+| `factory_linkedservice` | Microsoft.DataFactory/factories/linkedservices | `factorylinkedservice` | 260 | no | yes |
+| `factory_linkedservice_data_lake_storage_gen2` | Microsoft.DataFactory/factories/linkedservices | `adfsvst` | 260 | no | yes |
+| `factory_linkedservice_key_vault` | Microsoft.DataFactory/factories/linkedservices | `adfsvkv` | 260 | no | yes |
+| `factory_linkedservice_mysql` | Microsoft.DataFactory/factories/linkedservices | `adfsvmysql` | 260 | no | yes |
+| `factory_linkedservice_postgresql` | Microsoft.DataFactory/factories/linkedservices | `adfsvpsql` | 260 | no | yes |
+| `factory_linkedservice_sql_server` | Microsoft.DataFactory/factories/linkedservices | `adfsvmssql` | 260 | no | yes |
+| `factory_pipeline` | Microsoft.DataFactory/factories/pipelines | `adfpl` | 260 | no | yes |
+| `factory_trigger` | Microsoft.DataFactory/factories/triggers | `factorytrigger` | 260 | no | yes |
+| `factory_trigger_rerun_trigger` | Microsoft.DataFactory/factories/triggers/rerunTriggers | `factorytriggerreruntrigger` | 260 | no | yes |
+| `factory_trigger_schedule` | Microsoft.DataFactory/factories/triggers | `adftg` | 260 | no | yes |
+| `file_share` | Microsoft.FileShares/fileShares | `file-share` | 63 | yes | yes |
+| `firewall_application_rule_collection` |  | `fwapprc` | 80 | yes | no |
+| `firewall_ip_configuration` |  | `fwipconf` | 80 | yes | no |
+| `firewall_nat_rule_collection` |  | `fwnatrc` | 80 | yes | no |
+| `firewall_network_rule_collection` |  | `fwnetrc` | 80 | yes | no |
+| `firewall_policy` | Microsoft.Network/firewallPolicies | `afwp` | 80 | yes | no |
+| `firewall_policy_rule_collection_group` | Microsoft.Network/firewallPolicies/ruleCollectionGroups | `fwprcg` | 80 | yes | no |
+| `firewall_policy_rule_group` | Microsoft.Network/firewallPolicies/ruleGroups | `wafrg` | 80 | yes | no |
+| `fleet` | Microsoft.ContainerService/fleets | `fleet` | &mdash; | no | yes |
+| `flexible_server` | Microsoft.DBforPostgreSQL/flexibleServers | `pgsql` | &mdash; | no | yes |
+| `front_door` | Microsoft.Network/frontDoors | `afd` | 64 | yes | no |
+| `frontdoor_web_application_firewall_policy` | Microsoft.Network/frontdoorWebApplicationFirewallPolicies | `fdfp` | 128 | no | no |
+| `gallery` | Microsoft.Compute/galleries | `gal` | 80 | no | no |
+| `gallery_application` | Microsoft.Compute/galleries/applications | `gallery-application` | 80 | yes | no |
+| `gallery_application_version` | Microsoft.Compute/galleries/applications/versions | `galleryapplicationversion` | &mdash; | no | yes |
+| `gallery_image` | Microsoft.Compute/galleries/images | `si` | 80 | yes | no |
+| `gallery_image_version` | Microsoft.Compute/galleries/images/versions | `galleryimageversion` | &mdash; | no | yes |
+| `gateway` | Microsoft.HybridCompute/gateways | `arcgw` | &mdash; | no | yes |
+| `grafana` | Microsoft.Dashboard/grafana | `amg` | 80 | no | yes |
+| `host_pool` | Microsoft.DesktopVirtualization/hostPools | `vdpool` | 64 | yes | no |
+| `hosting_environment` | Microsoft.Web/hostingEnvironments | `host` | 35 | no | yes |
+| `hosting_environment_app_service_environment` | Microsoft.Web/hostingEnvironments | `ase` | 35 | no | yes |
+| `hub` | Microsoft.CustomerInsights/hubs | `hub` | 64 | no | no |
+| `hub_authorization_policy` | Microsoft.CustomerInsights/hubs/authorizationPolicies | `hubauthorizationpolicy` | 50 | no | no |
+| `hub_connector` | Microsoft.CustomerInsights/hubs/connectors | `hubconnector` | 128 | no | no |
+| `hub_connector_mapping` | Microsoft.CustomerInsights/hubs/connectors/mappings | `hubconnectormapping` | 128 | no | no |
+| `hub_interaction` | Microsoft.CustomerInsights/hubs/interactions | `hubinteraction` | 128 | no | no |
+| `hub_kpi` | Microsoft.CustomerInsights/hubs/kpi | `hubkpi` | 512 | no | no |
+| `hub_link` | Microsoft.CustomerInsights/hubs/links | `hublink` | 512 | no | no |
+| `hub_prediction` | Microsoft.CustomerInsights/hubs/predictions | `hubprediction` | 512 | no | no |
+| `hub_profile` | Microsoft.CustomerInsights/hubs/profiles | `hubprofile` | 128 | no | no |
+| `hub_relationship` | Microsoft.CustomerInsights/hubs/relationships | `hubrelationship` | 512 | no | no |
+| `hub_relationship_link` | Microsoft.CustomerInsights/hubs/relationshipLinks | `hubrelationshiplink` | 512 | no | no |
+| `hub_role_assignment` | Microsoft.CustomerInsights/hubs/roleAssignments | `hubroleassignment` | 128 | no | no |
+| `hub_view` | Microsoft.CustomerInsights/hubs/views | `hubview` | 512 | no | no |
+| `image` | Microsoft.Compute/images | `img` | 80 | yes | no |
+| `image_template` | Microsoft.VirtualMachineImages/imageTemplates | `it` | &mdash; | no | yes |
+| `import_export_job` | Microsoft.ImportExport/jobs | `import-export-job` | 64 | yes | no |
+| `information_protection_policy` | Microsoft.Security/informationProtectionPolicies | `informationprotectionpolicy` | &mdash; | no | yes |
+| `ingestion_setting` | Microsoft.Security/ingestionSettings | `ingestion-setting` | 260 | yes | no |
+| `integration_account` | Microsoft.Logic/integrationAccounts | `ia` | 80 | yes | no |
+| `integration_account_assembly` | Microsoft.Logic/integrationAccounts/assemblies | `integration-account-assembly` | 80 | yes | no |
+| `integration_account_batch_configuration` | Microsoft.Logic/integrationAccounts/batchConfigurations | `batch` | 20 | no | no |
+| `integration_account_certificate` | Microsoft.Logic/integrationAccounts/certificates | `integration-account-certificate` | 80 | yes | no |
+| `integration_account_map` | Microsoft.Logic/integrationAccounts/maps | `integration-account-map` | 80 | yes | no |
+| `integration_account_partner` | Microsoft.Logic/integrationAccounts/partners | `integration-account-partner` | 80 | yes | no |
+| `integration_account_rosettanetprocessconfiguration` | Microsoft.Logic/integrationAccounts/rosettanetprocessconfigurations | `integration-account-rosettanetprocessconfiguration` | 80 | yes | no |
+| `integration_account_schema` | Microsoft.Logic/integrationAccounts/schemas | `integration-account-schema` | 80 | yes | no |
+| `integration_account_session` | Microsoft.Logic/integrationAccounts/sessions | `integration-account-session` | 80 | yes | no |
+| `integration_service_environment` | Microsoft.Logic/integrationServiceEnvironments | `integration-service-environment` | 80 | yes | no |
+| `integration_service_environment_managed_api` | Microsoft.Logic/integrationServiceEnvironments/managedApis | `integration-service-environment-managed-api` | 80 | yes | no |
+| `io_t_app` | Microsoft.IoTCentral/IoTApps | `iotapp` | 63 | yes | yes |
+| `iot_hub` | Microsoft.Devices/IotHubs | `iot` | 50 | yes | no |
+| `iot_hub_certificate` | Microsoft.Devices/IotHubs/certificates | `iot-hub-certificate` | 64 | yes | no |
+| `iot_hub_event_hub_endpoint_consumer_group` | Microsoft.Devices/IotHubs/eventHubEndpoints/ConsumerGroups | `iotcg` | 50 | yes | no |
+| `iot_security_solution` | Microsoft.Security/iotSecuritySolutions | `iot-security-solution` | 260 | yes | no |
+| `ip_group` | Microsoft.Network/ipGroups | `ipg` | 80 | no | yes |
+| `key_vault_certificate` |  | `kvc` | 127 | yes | no |
+| `key_vault_key` | Microsoft.KeyVault/vaults/keys | `kvk` | 127 | yes | no |
+| `key_vault_vault` | Microsoft.KeyVault/vaults | `kv` | 24 | yes | no |
+| `kubernetes_cluster` | Microsoft.NetworkCloud/kubernetesClusters | `kubernetes-cluster` | 30 | yes | no |
+| `kubernetes_cluster_agent_pool` | Microsoft.NetworkCloud/kubernetesClusters/agentPools | `kubernetes-cluster-agent-pool` | 30 | yes | no |
+| `kubernetes_cluster_feature` | Microsoft.NetworkCloud/kubernetesClusters/features | `kubernetes-cluster-feature` | 63 | yes | no |
+| `kusto_cluster` | Microsoft.Kusto/clusters | `dec` | 22 | no | yes |
+| `l2_network` | Microsoft.NetworkCloud/l2Networks | `l2-network` | 30 | yes | no |
+| `l3_network` | Microsoft.NetworkCloud/l3Networks | `l3-network` | 30 | yes | no |
+| `lab_customimage` | Microsoft.DevTestLab/labs/customimages | `lab-customimage` | 80 | yes | no |
+| `lab_formula` | Microsoft.DevTestLab/labs/formulas | `lab-formula` | 80 | yes | no |
+| `lab_services_lab` | Microsoft.LabServices/labs | `lab-services-lab` | 100 | yes | no |
+| `lab_virtualmachine` | Microsoft.DevTestLab/labs/virtualmachines | `lab-virtualmachine` | &mdash; | yes | no |
+| `lab_virtualmachine_linux` | Microsoft.DevTestLab/labs/virtualmachines | `labvm` | 64 | yes | no |
+| `lab_virtualmachine_windows` | Microsoft.DevTestLab/labs/virtualmachines | `labvm` | 15 | yes | no |
+| `labplan` | Microsoft.LabServices/labplans | `labplan` | 100 | yes | no |
+| `lb_rule` | Microsoft.Network/loadBalancers/loadBalancingRules | `rule` | 80 | yes | no |
+| `ledger` | Microsoft.ConfidentialLedger/ledgers | `ledger` | 32 | yes | no |
+| `load_balancer` | Microsoft.Network/loadBalancers | `lb` | 80 | yes | no |
+| `load_balancer_inbound_nat_rule` | Microsoft.Network/loadBalancers/inboundNatRules | `rule` | 80 | yes | no |
+| `load_balancer_load_balancer_external` | Microsoft.Network/loadBalancers | `lbe` | 80 | yes | no |
+| `load_balancer_load_balancer_internal` | Microsoft.Network/loadBalancers | `lbi` | 80 | yes | no |
+| `load_test` | Microsoft.LoadTestService/loadTests | `lt` | 64 | no | yes |
+| `local_network_gateway` | Microsoft.Network/localNetworkGateways | `lgw` | 80 | yes | no |
+| `location_application_whitelisting` | Microsoft.Security/locations/applicationWhitelistings | `location-application-whitelisting` | 260 | yes | no |
+| `location_jit_network_access_policy` | Microsoft.Security/locations/jitNetworkAccessPolicies | `location-jit-network-access-policy` | 260 | yes | no |
+| `lock` | Microsoft.Authorization/locks | `lock` | 90 | yes | no |
+| `machine` | Microsoft.HybridCompute/machines | `arcs` | &mdash; | no | yes |
+| `machine_learning_registry` | Microsoft.MachineLearningServices/registries | `mlr` | 33 | yes | no |
+| `machine_learning_workspace` | Microsoft.MachineLearning/workspaces | `machinelearningworkspace` | 260 | no | yes |
+| `maintenance_configuration` | Microsoft.Maintenance/maintenanceConfigurations | `mc` | 80 | no | yes |
+| `managed_cluster_agent_pool_system` | Microsoft.ContainerService/managedClusters/agentPools | `npsystem` | &mdash; | no | yes |
+| `managed_cluster_agent_pool_user` | Microsoft.ContainerService/managedClusters/agentPools | `np` | &mdash; | no | yes |
+| `managed_environment` | Microsoft.App/managedEnvironments | `cae` | 60 | no | yes |
+| `managed_hsm` | Microsoft.KeyVault/managedHSMs | `kvmhsm` | &mdash; | no | yes |
+| `managed_instance` | Microsoft.Sql/managedInstances | `sqlmi` | 63 | yes | yes |
+| `management_group` | Microsoft.Management/managementGroups | `mg` | 90 | yes | no |
+| `manager` | Microsoft.StorSimple/managers | `manager` | 50 | yes | no |
+| `maps_account` | Microsoft.Maps/accounts | `map` | 98 | yes | no |
+| `mediaservice` | Microsoft.Media/mediaservices | `mediaservice` | 24 | no | yes |
+| `mediaservice_live_event` | Microsoft.Media/mediaservices/liveEvents | `mediaservice-live-event` | 32 | yes | no |
+| `mediaservice_live_event_live_output` | Microsoft.Media/mediaservices/liveEvents/liveOutputs | `mediaservice-live-event-live-output` | 256 | yes | no |
+| `mediaservice_streaming_endpoint` | Microsoft.Media/mediaservices/streamingEndpoints | `stream` | 24 | yes | no |
+| `metric_alert` | Microsoft.Insights/metricAlerts | `metricalert` | 260 | no | yes |
+| `mobile_network` | Microsoft.MobileNetwork/mobileNetworks | `mobile-network` | 64 | yes | no |
+| `mobile_network_data_network` | Microsoft.MobileNetwork/mobileNetworks/dataNetworks | `mobile-network-data-network` | 64 | yes | no |
+| `mobile_network_service` | Microsoft.MobileNetwork/mobileNetworks/services | `mobile-network-service` | 64 | yes | no |
+| `mobile_network_sim_policy` | Microsoft.MobileNetwork/mobileNetworks/simPolicies | `mobile-network-sim-policy` | 64 | yes | no |
+| `mobile_network_site` | Microsoft.MobileNetwork/mobileNetworks/sites | `mobile-network-site` | 64 | yes | no |
+| `mobile_network_slice` | Microsoft.MobileNetwork/mobileNetworks/slices | `mobile-network-slice` | 64 | yes | no |
+| `monitor_diagnostic_setting` | Microsoft.Insights/diagnosticSettings | `mds` | 260 | yes | no |
+| `monitor_workspace` | Microsoft.Monitor/accounts | `amw` | &mdash; | yes | no |
+| `namespace_event_hub` | Microsoft.EventHub/namespaces/eventHubs | `evh` | 256 | yes | no |
+| `namespace_eventhub_authorization_rule` | Microsoft.EventHub/namespaces/eventhubs/authorizationRules | `ehar` | 50 | yes | no |
+| `namespace_eventhub_consumergroup` | Microsoft.EventHub/namespaces/eventhubs/consumerGroups | `evhcg` | 50 | yes | no |
+| `namespace_hybrid_connection` | Microsoft.Relay/namespaces/HybridConnections | `rlhc` | 260 | yes | no |
+| `namespace_hybrid_connection_authorization_rule` | Microsoft.Relay/namespaces/HybridConnections/authorizationRules | `namespace-hybrid-connection-authorization-rule` | 50 | yes | no |
+| `namespace_migration_configuration` | Microsoft.ServiceBus/namespaces/migrationConfigurations | `namespacemigrationconfiguration` | &mdash; | no | yes |
+| `namespace_notification_hub` | Microsoft.NotificationHubs/namespaces/notificationHubs | `ntf` | 260 | yes | no |
+| `namespace_notification_hub_authorization_rule` | Microsoft.NotificationHubs/namespaces/notificationHubs/AuthorizationRules | `nhar` | 256 | yes | no |
+| `namespace_queue` | Microsoft.ServiceBus/namespaces/queues | `sbq` | 260 | yes | no |
+| `namespace_queue_authorization_rule` | Microsoft.ServiceBus/namespaces/queues/authorizationRules | `sbqar` | 50 | yes | no |
+| `namespace_topic` | Microsoft.ServiceBus/namespaces/topics | `sbt` | 260 | yes | no |
+| `namespace_topic_authorization_rule` | Microsoft.ServiceBus/namespaces/topics/authorizationRules | `sbtar` | 50 | yes | no |
+| `namespace_topic_subscription` | Microsoft.ServiceBus/namespaces/topics/subscriptions | `sbts` | 50 | yes | no |
+| `namespace_topic_subscription_rule` | Microsoft.ServiceBus/namespaces/topics/subscriptions/rules | `sbsr` | 50 | yes | no |
+| `namespace_wcf_relay` | Microsoft.Relay/namespaces/WcfRelays | `namespace-wcf-relay` | 260 | yes | no |
+| `namespace_wcf_relay_authorization_rule` | Microsoft.Relay/namespaces/WcfRelays/authorizationRules | `namespace-wcf-relay-authorization-rule` | 50 | yes | no |
+| `nat_gateway` | Microsoft.Network/natGateways | `ng` | 80 | no | yes |
+| `net_app_account` | Microsoft.NetApp/netAppAccounts | `net-app-account` | 128 | yes | no |
+| `net_app_account_backup` | Microsoft.NetApp/netAppAccounts/backups | `net-app-account-backup` | 225 | yes | no |
+| `net_app_account_backup_policy` | Microsoft.NetApp/netAppAccounts/backupPolicies | `net-app-account-backup-policy` | 64 | yes | no |
+| `net_app_account_bucket` | Microsoft.NetApp/netAppAccounts/buckets | `net-app-account-bucket` | 64 | yes | no |
+| `net_app_account_capacity_pool` | Microsoft.NetApp/netAppAccounts/capacityPools | `net-app-account-capacity-pool` | 64 | yes | no |
+| `net_app_account_share_name` | Microsoft.NetApp/netAppAccounts/shareNames | `net-app-account-share-name` | 64 | yes | no |
+| `net_app_account_snapshot` | Microsoft.NetApp/netAppAccounts/snapshots | `net-app-account-snapshot` | 255 | yes | no |
+| `net_app_account_snapshot_policy` | Microsoft.NetApp/netAppAccounts/snapshotPolicies | `net-app-account-snapshot-policy` | 64 | yes | no |
+| `net_app_account_volume` | Microsoft.NetApp/netAppAccounts/volumes | `net-app-account-volume` | 64 | yes | no |
+| `net_app_account_volume_group` | Microsoft.NetApp/netAppAccounts/volumeGroups | `net-app-account-volume-group` | 64 | yes | no |
+| `network_cloud_cluster` | Microsoft.NetworkCloud/clusters | `network-cloud-cluster` | 30 | yes | no |
+| `network_cloud_virtual_machine` | Microsoft.NetworkCloud/virtualMachines | `networkcloudvirtualmachine` | 64 | no | no |
+| `network_ddos_protection_plan` | Microsoft.Network/ddosProtectionPlans | `ddospp` | 80 | yes | no |
+| `network_interface` | Microsoft.Network/networkInterfaces | `nic` | 80 | yes | no |
+| `network_manager` | Microsoft.Network/networkManagers | `vnm` | 80 | no | yes |
+| `network_security_group` | Microsoft.Network/networkSecurityGroups | `nsg` | 80 | yes | no |
+| `network_security_group_security_rule` | Microsoft.Network/networkSecurityGroups/securityRules | `nsgsr` | 80 | yes | no |
+| `network_security_perimeter` | Microsoft.Network/networkSecurityPerimeters | `nsp` | &mdash; | no | yes |
+| `network_watcher` | Microsoft.Network/networkWatchers | `nw` | 80 | yes | no |
+| `notification_hubs_namespace` | Microsoft.NotificationHubs/namespaces | `ntfns` | 50 | yes | no |
+| `notification_hubs_namespace_authorization_rule` | Microsoft.NotificationHubs/namespaces/AuthorizationRules | `notification-hubs-namespace-authorization-rule` | 256 | yes | no |
+| `operational_insights_cluster` | Microsoft.OperationalInsights/clusters | `operational-insights-cluster` | 63 | yes | no |
+| `operational_insights_workspace` | Microsoft.OperationalInsights/workspaces | `log` | 63 | yes | no |
+| `packet_core_control_plane` | Microsoft.MobileNetwork/packetCoreControlPlanes | `packet-core-control-plane` | 64 | yes | no |
+| `packet_core_control_plane_packet_core_data_plane` | Microsoft.MobileNetwork/packetCoreControlPlanes/packetCoreDataPlanes | `packet-core-control-plane-packet-core-data-plane` | 64 | yes | no |
+| `packet_core_control_plane_packet_core_data_plane_attached_data_network` | Microsoft.MobileNetwork/packetCoreControlPlanes/packetCoreDataPlanes/attachedDataNetworks | `data-network` | 64 | yes | no |
+| `point_to_site_vpn_gateway` | Microsoft.Network/p2svpnGateways | `vpngw` | 80 | yes | no |
+| `policy_assignment` | Microsoft.Authorization/policyAssignments | `policyassignment` | &mdash; | no | yes |
+| `policy_definition` | Microsoft.Authorization/policyDefinitions | `pdef` | 64 | no | yes |
+| `policy_exemption` | Microsoft.Authorization/policyExemptions | `policyexemption` | &mdash; | no | yes |
+| `policy_set_definition` | Microsoft.Authorization/policySetDefinitions | `policysetdefinition` | &mdash; | no | yes |
+| `pool` | Microsoft.DevOpsInfrastructure/pools | `mdp` | &mdash; | no | yes |
+| `power_bi_dedicated_capacity` | Microsoft.PowerBIDedicated/capacities | `pbi` | 63 | no | yes |
+| `pricing` | Microsoft.Security/pricings | `pricing` | 260 | yes | no |
+| `private_cloud` | Microsoft.AVS/privateClouds | `private-cloud` | 80 | yes | no |
+| `private_dns_a_record` | Microsoft.Network/privateDnsZones/A | `pdnsrec` | 80 | yes | no |
+| `private_dns_aaaa_record` | Microsoft.Network/privateDnsZones/AAAA | `pdnsrec` | 80 | yes | no |
+| `private_dns_cname_record` | Microsoft.Network/privateDnsZones/CNAME | `pdnsrec` | 80 | yes | no |
+| `private_dns_mx_record` | Microsoft.Network/privateDnsZones/MX | `pdnsrec` | 80 | yes | no |
+| `private_dns_ptr_record` | Microsoft.Network/privateDnsZones/PTR | `pdnsrec` | 80 | yes | no |
+| `private_dns_srv_record` | Microsoft.Network/privateDnsZones/SRV | `pdnsrec` | 80 | yes | no |
+| `private_dns_txt_record` | Microsoft.Network/privateDnsZones/TXT | `pdnsrec` | 80 | yes | no |
+| `private_dns_zone` | Microsoft.Network/privateDnsZones | `pdns` | 63 | no | yes |
+| `private_dns_zone_group` | Microsoft.Network/privateEndpoints/privateDnsZoneGroups | `pdnszg` | 80 | yes | no |
+| `private_dns_zone_virtual_network_link` | Microsoft.Network/privateDnsZones/virtualNetworkLinks | `private-dns-zone-virtual-network-link` | 80 | yes | no |
+| `private_endpoint` | Microsoft.Network/privateEndpoints | `pep` | 64 | yes | no |
+| `private_link_hub` | Microsoft.Synapse/privateLinkHubs | `synplh` | 45 | no | yes |
+| `private_link_scope` | Microsoft.HybridCompute/privateLinkScopes | `pls` | &mdash; | no | yes |
+| `private_link_service` | Microsoft.Network/privateLinkServices | `pl` | 64 | yes | no |
+| `private_link_service_private_endpoint_connection` | Microsoft.Network/privateLinkServices/privateEndpointConnections | `private-link-service-private-endpoint-connection` | 64 | yes | no |
+| `private_service_connection` |  | `psc` | 80 | yes | no |
+| `profile_afd_endpoint` | Microsoft.Cdn/profiles/afdEndpoints | `fde` | 50 | no | yes |
+| `profile_afd_endpoint_route` | Microsoft.Cdn/profiles/afdEndpoints/routes | `cdnr` | 50 | yes | no |
+| `profile_cdn` | Microsoft.Cdn/profiles | `cdnp` | 260 | yes | no |
+| `profile_endpoint` | Microsoft.Cdn/profiles/endpoints | `cdne` | 50 | yes | no |
+| `profile_front_door_standard_premium` | Microsoft.Cdn/profiles | `afd` | 260 | yes | no |
+| `profile_origin_group` | Microsoft.Cdn/profiles/originGroups | `cdnog` | 50 | yes | no |
+| `profile_origin_group_origin` | Microsoft.Cdn/profiles/originGroups/origins | `cdno` | 50 | yes | no |
+| `prometheus_rule_group` | Microsoft.AlertsManagement/prometheusRuleGroups | `prometheusrulegroup` | 260 | no | yes |
+| `provisioning_service` | Microsoft.Devices/provisioningServices | `provs` | 64 | yes | no |
+| `provisioning_service_certificate` | Microsoft.Devices/provisioningServices/certificates | `pcert` | 64 | yes | no |
+| `proximity_placement_group` | Microsoft.Compute/proximityPlacementGroups | `ppg` | 80 | no | yes |
+| `public_ip_address` | Microsoft.Network/publicIPAddresses | `pip` | 80 | yes | no |
+| `public_ip_prefix` | Microsoft.Network/publicIPPrefixes | `ippre` | 80 | yes | no |
+| `purview_account` | Microsoft.Purview/accounts | `pview` | 63 | no | yes |
+| `quantum_workspace` | Microsoft.Quantum/workspaces | `quantum-workspace` | 54 | yes | no |
+| `querypack` | Microsoft.OperationalInsights/querypacks | `pack` | 63 | no | yes |
+| `queue` | Microsoft.Storage/queue | `queue` | 63 | yes | yes |
+| `rack` | Microsoft.NetworkCloud/racks | `rack` | 30 | yes | no |
+| `recovery_services_vault` | Microsoft.RecoveryServices/vaults | `rsv` | 50 | yes | no |
+| `redhat_openshift_cluster` | Microsoft.RedHatOpenShift/openShiftClusters | `aro` | 63 | yes | no |
+| `redis` | Microsoft.Cache/Redis | `redis` | 63 | yes | no |
+| `redis_enterprise` | Microsoft.Cache/RedisEnterprise | `amr` | &mdash; | no | yes |
+| `redis_firewall_rule` | Microsoft.Cache/Redis/firewallRules | `redisfw` | 256 | no | no |
+| `registration_hub` | Microsoft.NetworkCloud/registrationHubs | `registration-hub` | 30 | yes | no |
+| `registration_hub_machine` | Microsoft.NetworkCloud/registrationHubs/machines | `registration-hub-machine` | 40 | yes | no |
+| `registry` | Microsoft.ContainerRegistry/registries | `cr` | 50 | no | no |
+| `registry_build_task` | Microsoft.ContainerRegistry/registries/buildTasks | `registrybuildtask` | 50 | no | no |
+| `registry_build_task_step` | Microsoft.ContainerRegistry/registries/buildTasks/steps | `registrybuildtaskstep` | 50 | no | no |
+| `registry_replication` | Microsoft.ContainerRegistry/registries/replications | `registryreplication` | 50 | no | no |
+| `registry_scope_map` | Microsoft.ContainerRegistry/registries/scopeMaps | `registry-scope-map` | 50 | yes | no |
+| `registry_task` | Microsoft.ContainerRegistry/registries/tasks | `registry-task` | 50 | yes | no |
+| `registry_token` | Microsoft.ContainerRegistry/registries/tokens | `registry-token` | 50 | yes | no |
+| `registry_webhook` | Microsoft.ContainerRegistry/registries/webhooks | `crwh` | 50 | no | no |
+| `relay_namespace` | Microsoft.Relay/namespaces | `rln` | 50 | yes | no |
+| `relay_namespace_authorization_rule` | Microsoft.Relay/namespaces/AuthorizationRules | `relay-namespace-authorization-rule` | 50 | yes | no |
+| `resource_group` | Microsoft.Resources/resourceGroups | `rg` | 90 | yes | no |
+| `resource_guard` | Microsoft.DataProtection/resourceGuards | `rgd` | &mdash; | no | yes |
+| `resource_provider` | Microsoft.CustomProviders/resourceProviders | `prov` | 64 | no | yes |
+| `restore_point_collection` | Microsoft.Compute/restorePointCollections | `rpc` | 80 | no | yes |
+| `role_assignment` | Microsoft.Authorization/roleAssignments | `ra` | 36 | no | yes |
+| `role_definition` | Microsoft.Authorization/roleDefinitions | `rd` | 36 | no | yes |
+| `route_filter` | Microsoft.Network/routeFilters | `rf` | 80 | yes | no |
+| `route_filter_route_filter_rule` | Microsoft.Network/routeFilters/routeFilterRules | `route-filter-route-filter-rule` | 80 | yes | no |
+| `route_table` | Microsoft.Network/routeTables | `rt` | 80 | yes | no |
+| `route_table_route` | Microsoft.Network/routeTables/routes | `udr` | 80 | yes | no |
+| `scaling_plan` | Microsoft.DesktopVirtualization/scalingPlans | `vdscaling` | 63 | no | yes |
+| `scheduled_query_rule` | Microsoft.Insights/scheduledQueryRules | `scheduledqueryrule` | 260 | no | yes |
+| `scheduled_query_rule_alert` | Microsoft.Insights/scheduledQueryRules | `msqa` | 260 | no | yes |
+| `search_service` | Microsoft.Search/searchServices | `srch` | 64 | no | yes |
+| `security_contact` | Microsoft.Security/securityContacts | `security-contact` | 260 | yes | no |
+| `server_administrator` | Microsoft.Sql/servers/administrators | `serveradministrator` | &mdash; | no | yes |
+| `server_database_sync_group` | Microsoft.Sql/servers/databases/syncGroups | `server-database-sync-group` | 150 | yes | no |
+| `server_elastic_pool` | Microsoft.Sql/servers/elasticPools | `sqlep` | 128 | no | yes |
+| `server_failover_group` | Microsoft.Sql/servers/failoverGroups | `sqlfg` | 63 | yes | yes |
+| `server_farm` | Microsoft.Web/serverFarms | `asp` | 60 | yes | no |
+| `server_groupsv2` | Microsoft.DBforPostgreSQL/serverGroupsv2 | `cospos` | 63 | no | yes |
+| `server_job_agent` | Microsoft.Sql/servers/jobAgents | `sqlja` | 128 | no | yes |
+| `server_key` | Microsoft.Sql/servers/keys | `serverkey` | &mdash; | no | yes |
+| `server_vulnerability_assessment` | Microsoft.Security/serverVulnerabilityAssessments | `servervulnerabilityassessment` | &mdash; | no | yes |
+| `service_api` | Microsoft.ApiManagement/service/apis | `service-api` | 80 | yes | no |
+| `service_api_issue` | Microsoft.ApiManagement/service/apis/issues | `service-api-issue` | 80 | yes | no |
+| `service_api_issue_attachment` | Microsoft.ApiManagement/service/apis/issues/attachments | `service-api-issue-attachment` | 80 | yes | no |
+| `service_api_issue_comment` | Microsoft.ApiManagement/service/apis/issues/comments | `service-api-issue-comment` | 80 | yes | no |
+| `service_api_operation` | Microsoft.ApiManagement/service/apis/operations | `service-api-operation` | 80 | yes | no |
+| `service_api_operation_tag` | Microsoft.ApiManagement/service/apis/operations/tags | `service-api-operation-tag` | 80 | yes | no |
+| `service_api_release` | Microsoft.ApiManagement/service/apis/releases | `service-api-release` | 80 | yes | no |
+| `service_api_schema` | Microsoft.ApiManagement/service/apis/schemas | `service-api-schema` | 80 | yes | no |
+| `service_api_tag` | Microsoft.ApiManagement/service/apis/tags | `service-api-tag` | 80 | yes | no |
+| `service_api_tag_description` | Microsoft.ApiManagement/service/apis/tagDescriptions | `service-api-tag-description` | 80 | yes | no |
+| `service_api_version_set` | Microsoft.ApiManagement/service/api-version-sets | `service-api-version-set` | 80 | yes | no |
+| `service_authorization_server` | Microsoft.ApiManagement/service/authorizationServers | `service-authorization-server` | 80 | yes | no |
+| `service_backend` | Microsoft.ApiManagement/service/backends | `service-backend` | 80 | yes | no |
+| `service_bus_namespace` | Microsoft.ServiceBus/namespaces | `sbns` | 50 | yes | no |
+| `service_bus_namespace_authorization_rule` | Microsoft.ServiceBus/namespaces/AuthorizationRules | `sbar` | 50 | yes | no |
+| `service_bus_namespace_disaster_recovery_config` | Microsoft.ServiceBus/namespaces/disasterRecoveryConfigs | `service-bus-namespace-disaster-recovery-config` | 50 | yes | no |
+| `service_certificate` | Microsoft.ApiManagement/service/certificates | `service-certificate` | 80 | yes | no |
+| `service_diagnostic` | Microsoft.ApiManagement/service/diagnostics | `service-diagnostic` | 80 | yes | no |
+| `service_end_point_policy` | Microsoft.Network/serviceEndPointPolicies | `se` | 80 | yes | no |
+| `service_fabric_cluster` | Microsoft.ServiceFabric/clusters | `sf` | 23 | yes | yes |
+| `service_fabric_managed_cluster` | Microsoft.ServiceFabric/managedClusters | `sfmc` | &mdash; | no | yes |
+| `service_group` | Microsoft.ApiManagement/service/groups | `service-group` | 80 | yes | no |
+| `service_group_user` | Microsoft.ApiManagement/service/groups/users | `service-group-user` | 80 | yes | no |
+| `service_identity_provider` | Microsoft.ApiManagement/service/identityProviders | `service-identity-provider` | 80 | yes | no |
+| `service_logger` | Microsoft.ApiManagement/service/loggers | `service-logger` | 80 | yes | no |
+| `service_notification` | Microsoft.ApiManagement/service/notifications | `service-notification` | 80 | yes | no |
+| `service_notification_recipient_email` | Microsoft.ApiManagement/service/notifications/recipientEmails | `service-notification-recipient-email` | 80 | yes | no |
+| `service_openid_connect_provider` | Microsoft.ApiManagement/service/openidConnectProviders | `service-openid-connect-provider` | 80 | yes | no |
+| `service_policy` | Microsoft.ApiManagement/service/policies | `service-policy` | 80 | yes | no |
+| `service_product` | Microsoft.ApiManagement/service/products | `service-product` | 80 | yes | no |
+| `service_product_api` | Microsoft.ApiManagement/service/products/apis | `service-product-api` | 80 | yes | no |
+| `service_product_group` | Microsoft.ApiManagement/service/products/groups | `service-product-group` | 80 | yes | no |
+| `service_product_tag` | Microsoft.ApiManagement/service/products/tags | `service-product-tag` | 80 | yes | no |
+| `service_project` | Microsoft.DataMigration/services/projects | `migr` | 57 | yes | no |
+| `service_property` | Microsoft.ApiManagement/service/properties | `service-property` | 80 | yes | no |
+| `service_subscription` | Microsoft.ApiManagement/service/subscriptions | `service-subscription` | 80 | yes | no |
+| `service_tag` | Microsoft.ApiManagement/service/tags | `service-tag` | 80 | yes | no |
+| `service_template` | Microsoft.ApiManagement/service/templates | `service-template` | 80 | yes | no |
+| `service_user` | Microsoft.ApiManagement/service/users | `service-user` | 80 | yes | no |
+| `setting` | Microsoft.Security/settings | `setting` | &mdash; | no | yes |
+| `signal_r` | Microsoft.SignalRService/SignalR | `sigr` | 63 | yes | no |
+| `sim_group` | Microsoft.MobileNetwork/simGroups | `sim-group` | 64 | yes | no |
+| `sim_group_sim` | Microsoft.MobileNetwork/simGroups/sims | `sim-group-sim` | 64 | yes | no |
+| `site_function_app` | Microsoft.Web/sites | `func` | 60 | yes | no |
+| `site_private_endpoint_connection` | Microsoft.Web/sites/privateEndpointConnections | `site-private-endpoint-connection` | 64 | yes | no |
+| `site_slot` | Microsoft.Web/sites/slots | `site-slot` | 59 | yes | no |
+| `site_web_app` | Microsoft.Web/sites | `app` | 60 | yes | no |
+| `snapshot` | Microsoft.Compute/snapshots | `snap` | 80 | yes | no |
+| `solution` | Microsoft.OperationsManagement/solutions | `solution` | &mdash; | no | yes |
+| `spring` | Microsoft.AppPlatform/spring | `spring` | 32 | yes | yes |
+| `sql_server` | Microsoft.Sql/servers | `sql` | 63 | yes | yes |
+| `sql_server_database` | Microsoft.Sql/servers/databases | `sqldb` | 128 | no | yes |
+| `sql_server_firewall_rule` | Microsoft.Sql/servers/firewallRules | `sqlfw` | 128 | no | yes |
+| `sql_vulnerability_assessment_baseline_rule` | Microsoft.Security/sqlVulnerabilityAssessments/baselineRules | `sql-vulnerability-assessment-baseline-rule` | 260 | yes | no |
+| `ssh_public_key` | Microsoft.Compute/sshPublicKeys | `sshkey` | 80 | no | yes |
+| `static_site` | Microsoft.Web/staticSites | `stapp` | 40 | no | yes |
+| `storage_account` | Microsoft.Storage/storageAccounts | `st` | 24 | no | yes |
+| `storage_account_blob_service` | Microsoft.Storage/storageAccounts/blobServices | `storageaccountblobservice` | &mdash; | no | yes |
+| `storage_account_blob_service_container` | Microsoft.Storage/storageAccounts/blobServices/containers | `storage-account-blob-service-container` | 63 | yes | yes |
+| `storage_account_blob_service_container_blob_container` | Microsoft.Storage/storageAccounts/blobServices/containers | `stct` | 63 | yes | yes |
+| `storage_account_blob_service_container_data_lake_gen2_filesystem` | Microsoft.Storage/storageAccounts/blobServices/containers | `stdl` | 63 | yes | yes |
+| `storage_account_file_service` | Microsoft.Storage/storageAccounts/fileServices | `storageaccountfileservice` | &mdash; | no | yes |
+| `storage_account_file_service_share` | Microsoft.Storage/storageAccounts/fileServices/shares | `share` | 63 | yes | yes |
+| `storage_account_management_policy` | Microsoft.Storage/storageAccounts/managementPolicies | `storageaccountmanagementpolicy` | &mdash; | no | yes |
+| `storage_account_vm` | Microsoft.Storage/storageAccounts | `stvm` | 24 | no | yes |
+| `storage_appliance` | Microsoft.NetworkCloud/storageAppliances | `storage-appliance` | 30 | yes | no |
+| `storage_blob` |  | `blob` | 1024 | yes | no |
+| `storage_queue` | Microsoft.Storage/storageAccounts/queueServices/queues | `stq` | 63 | yes | yes |
+| `storage_share_directory` |  | `sts` | 63 | yes | yes |
+| `storage_sync_service` | Microsoft.StorageSync/storageSyncServices | `sss` | 260 | yes | no |
+| `storage_sync_service_sync_group` | Microsoft.StorageSync/storageSyncServices/syncGroups | `storage-sync-service-sync-group` | 260 | yes | no |
+| `storage_table` | Microsoft.Storage/storageAccounts/tableServices/tables | `stt` | 63 | no | yes |
+| `stream_analytics_cluster` | Microsoft.StreamAnalytics/clusters | `asa` | &mdash; | no | yes |
+| `streamingjob` | Microsoft.StreamAnalytics/streamingjobs | `asa` | 63 | yes | no |
+| `streamingjob_function` | Microsoft.StreamAnalytics/streamingjobs/functions | `streamingjob-function` | 63 | yes | no |
+| `streamingjob_function_javascript_udf` | Microsoft.StreamAnalytics/streamingjobs/functions | `asafunc` | 63 | yes | no |
+| `streamingjob_input` | Microsoft.StreamAnalytics/streamingjobs/inputs | `streamingjob-input` | 63 | yes | no |
+| `streamingjob_input_reference_blob` | Microsoft.StreamAnalytics/streamingjobs/inputs | `asarblob` | 63 | yes | no |
+| `streamingjob_input_stream_blob` | Microsoft.StreamAnalytics/streamingjobs/inputs | `asaiblob` | 63 | yes | no |
+| `streamingjob_input_stream_event_hub` | Microsoft.StreamAnalytics/streamingjobs/inputs | `asaieh` | 63 | yes | no |
+| `streamingjob_input_stream_iot_hub` | Microsoft.StreamAnalytics/streamingjobs/inputs | `asaiiot` | 63 | yes | no |
+| `streamingjob_output` | Microsoft.StreamAnalytics/streamingjobs/outputs | `streamingjob-output` | 63 | yes | no |
+| `streamingjob_output_blob` | Microsoft.StreamAnalytics/streamingjobs/outputs | `asaoblob` | 63 | yes | no |
+| `streamingjob_output_event_hub` | Microsoft.StreamAnalytics/streamingjobs/outputs | `asaoeh` | 63 | yes | no |
+| `streamingjob_output_service_bus_queue` | Microsoft.StreamAnalytics/streamingjobs/outputs | `asaosbq` | 63 | yes | no |
+| `streamingjob_output_service_bus_topic` | Microsoft.StreamAnalytics/streamingjobs/outputs | `asaosbt` | 63 | yes | no |
+| `streamingjob_output_sql_database` | Microsoft.StreamAnalytics/streamingjobs/outputs | `asaomssql` | 63 | yes | no |
+| `streamingjob_transformation` | Microsoft.StreamAnalytics/streamingjobs/transformations | `streamingjob-transformation` | 63 | yes | no |
+| `synapse_workspace` | Microsoft.Synapse/workspaces | `synw` | 50 | yes | yes |
+| `system_topic` | Microsoft.EventGrid/systemTopics | `egst` | 50 | no | yes |
+| `table` | Microsoft.Storage/table | `table` | 63 | no | no |
+| `tag_name` | Microsoft.Resources/tagNames | `tagname` | 512 | no | yes |
+| `tag_name_tag_value` | Microsoft.Resources/tagNames/tagValues | `tagnametagvalue` | 256 | no | yes |
+| `template_spec` | Microsoft.Resources/templateSpecs | `ts` | 90 | yes | no |
+| `topic` | Microsoft.EventGrid/topics | `egt` | 50 | yes | no |
+| `traffic_manager_profile` | Microsoft.Network/trafficManagerProfiles | `traf` | 63 | yes | no |
+| `trunked_network` | Microsoft.NetworkCloud/trunkedNetworks | `trunked-network` | 30 | yes | no |
+| `user_assigned_identity` | Microsoft.ManagedIdentity/userAssignedIdentities | `id` | 128 | yes | no |
+| `vault_backup_policy` | Microsoft.RecoveryServices/vaults/backupPolicies | `vault-backup-policy` | 150 | yes | no |
+| `vault_backup_policy_virtual_machine` | Microsoft.RecoveryServices/vaults/backupPolicies | `bkpol` | 150 | yes | no |
+| `vault_secret` | Microsoft.KeyVault/vaults/secrets | `kvs` | 127 | yes | no |
+| `video_indexer_account` | Microsoft.VideoIndexer/accounts | `avi` | &mdash; | no | yes |
+| `virtual_enclave` | Microsoft.Mission/virtualEnclaves | `ve` | &mdash; | no | yes |
+| `virtual_enclave_enclave_endpoint` | Microsoft.Mission/virtualEnclaves/enclaveEndpoints | `ee` | &mdash; | no | yes |
+| `virtual_enclave_workload` | Microsoft.Mission/virtualEnclaves/workloads | `wl` | &mdash; | no | yes |
+| `virtual_hub_route_server` | Microsoft.Network/virtualHubs | `rtserv` | 80 | no | yes |
+| `virtual_hub_virtual_wan_hub` | Microsoft.Network/virtualHubs | `vhub` | 80 | no | yes |
+| `virtual_machine_console` | Microsoft.NetworkCloud/virtualMachines/consoles | `virtualmachineconsole` | &mdash; | no | yes |
+| `virtual_machine_extension` | Microsoft.Compute/virtualMachines/extensions | `vmx` | 80 | yes | no |
+| `virtual_machine_scale_set` | Microsoft.Compute/virtualMachineScaleSets | `vmss` | 15 | no | yes |
+| `virtual_machine_scale_set_extension` | Microsoft.Compute/virtualMachineScaleSets/extensions | `vmssx` | 80 | yes | no |
+| `virtual_machine_windows` | Microsoft.Compute/virtualMachines | `vm` | 15 | yes | no |
+| `virtual_network` | Microsoft.Network/virtualNetworks | `vnet` | 64 | yes | no |
+| `virtual_network_gateway` | Microsoft.Network/virtualNetworkGateways | `vgw` | 80 | yes | no |
+| `virtual_network_gateway_express_route_gateway` | Microsoft.Network/virtualNetworkGateways | `ergw` | 80 | yes | no |
+| `virtual_network_subnet` | Microsoft.Network/virtualNetworks/subnets | `snet` | 80 | yes | no |
+| `virtual_network_virtual_network_peering` | Microsoft.Network/virtualNetworks/virtualNetworkPeerings | `peer` | 80 | yes | no |
+| `virtual_wan` | Microsoft.Network/virtualWans | `vwan` | 80 | yes | no |
+| `volume` | Microsoft.NetworkCloud/volumes | `volume` | 64 | yes | no |
+| `vpn_gateway` | Microsoft.Network/vpnGateways | `vpng` | 80 | yes | no |
+| `vpn_gateway_vpn_connection` | Microsoft.Network/vpnGateways/vpnConnections | `vcn` | 80 | yes | no |
+| `vpn_site` | Microsoft.Network/vpnSites | `vst` | 80 | yes | no |
+| `web_pub_sub` | Microsoft.SignalRService/webPubSub | `wps` | &mdash; | no | yes |
+| `web_service` | Microsoft.MachineLearning/webServices | `webservice` | 260 | no | yes |
+| `workflow` | Microsoft.Logic/workflows | `logic` | 43 | yes | no |
+| `workspace_big_data_pool` | Microsoft.Synapse/workspaces/bigDataPools | `synsp` | 15 | no | yes |
+| `workspace_collection` | Microsoft.PowerBI/workspaceCollections | `workspace-collection` | 63 | yes | no |
+| `workspace_compute` | Microsoft.MachineLearningServices/workspaces/computes | `workspace-compute` | &mdash; | yes | no |
+| `workspace_datastore` | Microsoft.MachineLearningServices/workspaces/datastores | `workspacedatastore` | &mdash; | no | yes |
+| `workspace_hub` | Microsoft.MachineLearningServices/workspaces | `hub` | 33 | yes | no |
+| `workspace_machine_learning` | Microsoft.MachineLearningServices/workspaces | `mlw` | 33 | yes | no |
+| `workspace_project` | Microsoft.MachineLearningServices/workspaces | `proj` | 33 | yes | no |
+| `workspace_sql_pool` | Microsoft.Synapse/workspaces/sqlPools | `syndp` | 60 | no | yes |
