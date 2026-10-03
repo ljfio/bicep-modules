@@ -124,11 +124,19 @@ groups, subscriptions, and tags rather than in resource names; see the
 bicep-modules/
 ├── modules/
 │   └── naming/
-│       ├── naming.bicep        (naming function library)
-│       └── README.md           (API, region + resource type catalogue)
+│       ├── naming.bicep        (hand-written: naming functions and namingContext type)
+│       ├── rules.bicep         (generated: resource type keys and per-type rules)
+│       ├── regions.bicep       (generated: Azure region abbreviations)
+│       └── README.md           (generated: API, region + resource type catalogue)
+├── scripts/
+│   └── generate.py             (regenerates rules.bicep, regions.bicep, README)
 ├── tests/
 │   ├── naming.test.bicep       (template exercising every export)
 │   └── verify.py               (evaluates the compiled template, asserts names)
 ├── bicepconfig.json
 └── .github/workflows/publish.yml
 ```
+
+`naming.bicep` imports the generated data files and re-exports the combined
+surface; publishing compiles the three files into a single self-contained
+artifact. CI regenerates the generated files and fails on drift.
