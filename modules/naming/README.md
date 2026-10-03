@@ -37,15 +37,67 @@ trimmed, empty segments dropped, and any segment that names an Azure region is
 abbreviated automatically (`uksouth` or `UK South` -> `uks`). The type
 abbreviation is prepended automatically.
 
+## Naming context for nested modules
+
+Define the core segments once as a context object and pass it down to nested
+modules; each module then names its resources without repeating the core
+segments.
+
+```bicep
+// main.bicep
+param project string = 'contoso'
+param environment string = 'demo'
+param location string = 'uksouth'
+
+var namingContext = {
+  project: project
+  environment: environment
+  region: location
+}
+
+module api 'modules/api.bicep' = {
+  name: naming.resourceNameFrom('resource_group', namingContext, ['api'])
+  params: {
+    namingContext: namingContext
+  }
+}
+```
+
+```bicep
+// modules/api.bicep
+param namingContext object
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: naming.resourceNameFrom('storage_account', namingContext, ['shared'])
+  // -> stcontosodemouksshared
+}
+```
+
+Context keys, in order and all optional: `organization`, `project`,
+`environment`, `region`, `component`. `segmentsFrom(context)` returns the
+ordered segment array when you need it directly.
+
 ## Functions
 
 | Function | Description |
 |---|---|
 | `resourceName(type, segments string[])` | Compliant name for the type: hyphens when allowed, compact when not, lower case when required, truncated to the type's maximum length. |
 | `compactResourceName(type, segments string[])` | Same, but always compact (hyphens stripped). |
+| `resourceNameFrom(type, context object, extraSegments string[])` | As `resourceName`, building the leading segments from a naming context object; `extraSegments` (may be empty) are appended after the context segments. |
+| `segmentsFrom(context object)` | Ordered segments for a naming context object (`organization`, `project`, `environment`, `region`, `component`, all optional; region abbreviated). |
 | `resourceAbbreviation(type)` | The Cloud Adoption Framework abbreviation for the type (`resource_group` -> `rg`). |
 | `regionCode(region)` | Short abbreviation for an Azure region (`westeurope`/`West Europe` -> `euw`); unknown values pass through unchanged. |
 | `resourceNameMaxLength(type)` | Maximum name length allowed for the type (255 when undocumented). |
+
+## Why not `naming.resource.storageAccount(...)`?
+
+Bicep user-defined functions cannot be grouped into nested namespaces, so
+`naming.resource.storageAccount(...)` is not expressible. Generating one
+exported function per resource type is also not viable: Bicep inlines every
+exported function into each consuming template (a consumer using 2 of 300
+exported functions receives all 301), so 579 per-type wrappers would far exceed
+ARM's per-template function limits and bloat every deployment. Use
+`resourceName('<type key>', segments)` with the type key table below instead.
 
 ## Compliance behaviour
 

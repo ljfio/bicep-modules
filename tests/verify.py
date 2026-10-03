@@ -23,6 +23,10 @@ EXPECTED = {
     'resourceGroupAbbreviation': 'rg',
     'storageAccountMaxLength': 24,
     'segmentArrayOrder': 'app-contoso-demo-uks-api-web',
+    'contextName': 'stcontosodemouksshared',
+    'contextPartialName': 'rg-contoso-uks-app',
+    'contextWithComponent': 'kv-contoso-demo-uks-shar',  # context-only, truncated to 24
+    'contextSegments': ['contoso', 'demo', 'euw'],
 }
 
 
@@ -237,6 +241,11 @@ class Evaluator:
             return ''.join(vals)
         if name == 'createArray':
             return vals
+        if name == 'createObject':
+            obj = {}
+            for i in range(0, len(vals), 2):
+                obj[vals[i]] = vals[i + 1]
+            return obj
         if name == 'take':
             return vals[0][:vals[1]]
         raise ParseError(f'unsupported function {name}')

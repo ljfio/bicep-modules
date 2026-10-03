@@ -14,3 +14,9 @@ output regionUnknownPassesThrough string = naming.regionCode('notaregion')
 output resourceGroupAbbreviation string = naming.resourceAbbreviation('resource_group')
 output storageAccountMaxLength int = naming.resourceNameMaxLength('storage_account')
 output segmentArrayOrder string = naming.resourceName('site_web_app', ['contoso', 'demo', 'uksouth', '', 'api', 'web'])
+
+// Naming context: define core segments once, pass down to nested modules
+output contextName string = naming.resourceNameFrom('storage_account', { project: 'contoso', environment: 'demo', region: 'uksouth' }, ['shared'])
+output contextPartialName string = naming.resourceNameFrom('resource_group', { project: 'contoso', region: 'UK South' }, ['app'])
+output contextWithComponent string = naming.resourceNameFrom('key_vault_vault', { project: 'contoso', environment: 'demo', region: 'uksouth', component: 'shared' }, [])
+output contextSegments array = naming.segmentsFrom({ project: 'contoso', environment: 'demo', region: 'westeurope' })

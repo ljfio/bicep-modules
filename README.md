@@ -78,6 +78,38 @@ az bicep restore --file infra/main.bicep
 az bicep build --file infra/main.bicep --stdout > /dev/null
 ```
 
+### Naming context for nested modules
+
+Define the core segments once as a context object and pass it down; nested
+modules name their resources with `resourceNameFrom` without repeating the
+core segments:
+
+```bicep
+// main.bicep
+var namingContext = { project: project, environment: environment, region: location }
+
+module api 'modules/api.bicep' = {
+  name: naming.resourceNameFrom('resource_group', namingContext, ['api'])
+  params: {
+    namingContext: namingContext
+  }
+}
+```
+
+```bicep
+// modules/api.bicep
+param namingContext object
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: naming.resourceNameFrom('storage_account', namingContext, ['shared'])
+  // -> stcontosodemouksshared
+}
+```
+
+Context keys, in order and all optional: `organization`, `project`,
+`environment`, `region`, `component`. See the
+[module README](modules/naming/README.md) for the full API.
+
 ## Layout
 
 ```

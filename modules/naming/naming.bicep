@@ -4243,3 +4243,20 @@ func resourceName(type resourceType, segments string[]) string =>
 func compactResourceName(type resourceType, segments string[]) string =>
   applyLengthLimit(type, applyCase(type, replace(rawName(type, segments), '-', '')))
 
+@description('Converts a naming context object into ordered naming segments, for defining the core segments once (for example project, environment, region) and passing them down to nested modules. Context keys, all optional and in this order: `organization`, `project`, `environment`, `region`, `component`. The `region` key accepts any Azure region form (`uksouth`, `uk-south`, `UK South`) and is abbreviated; missing or empty keys are dropped.')
+@export()
+func segmentsFrom(context object) string[] =>
+  filter([
+    trim(context.organization ?? '')
+    trim(context.project ?? '')
+    trim(context.environment ?? '')
+    regionCode(trim(context.region ?? ''))
+    trim(context.component ?? '')
+  ], (segment) => segment != '')
+
+@description('Composes a compliant resource name from a naming context object plus any extra segments appended after the context segments (typically the component for that resource). `context` uses the keys of `segmentsFrom` (`organization`, `project`, `environment`, `region`, `component`, all optional); `extraSegments` may be empty. Define the context once at the top level and pass it to nested modules, which then name their resources without repeating the core segments.')
+@export()
+func resourceNameFrom(type resourceType, context object, extraSegments string[]) string =>
+  resourceName(type, concat(segmentsFrom(context), extraSegments))
+
+
