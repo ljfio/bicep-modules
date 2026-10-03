@@ -74,4 +74,4 @@ jobs:
         run: |
           bicep publish modules/naming/naming.bicep \
             --target "br:ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/bicep-modules/naming:$VERSION" \
-            --documentationUri "https://github.com/${GITHUB_REPOSITORY}/tree/main/modules/naming"
+            --documentation-uri "https://github.com/${GITHUB_REPOSITORY}/tree/main/modules/naming"
