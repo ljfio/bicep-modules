@@ -27,6 +27,7 @@ EXPECTED = {
     'contextPartialName': 'rg-contoso-uks-app',
     'contextWithComponent': 'kv-contoso-demo-uks-shar',  # context-only, truncated to 24
     'contextSegments': ['contoso', 'demo', 'euw'],
+    'contextFromTypedParam': 'stcontosodemouksshared',
 }
 
 
@@ -216,6 +217,8 @@ class Evaluator:
                 return env.get(vals[0])
             spec = self.parameters[vals[0]]
             return spec.get('defaultValue')
+        if name == 'tryGet':
+            return get(vals[0], vals[1])
         if name == 'coalesce':
             for v in vals:
                 if v is not None:

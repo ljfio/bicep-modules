@@ -20,3 +20,7 @@ output contextName string = naming.resourceNameFrom('storage_account', { workloa
 output contextPartialName string = naming.resourceNameFrom('resource_group', { workload: 'contoso', region: 'UK South' }, ['app'])
 output contextWithComponent string = naming.resourceNameFrom('key_vault_vault', { workload: 'contoso', environment: 'demo', region: 'uksouth', component: 'shared' }, [])
 output contextSegments array = naming.segmentsFrom({ workload: 'contoso', environment: 'demo', region: 'westeurope' })
+
+// Exported sealed context type usable for module parameters
+param contextParam naming.namingContext = { workload: 'contoso', environment: 'demo', region: 'uksouth' }
+output contextFromTypedParam string = naming.resourceNameFrom('storage_account', contextParam, ['shared'])

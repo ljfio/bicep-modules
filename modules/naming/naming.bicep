@@ -1,4 +1,5 @@
 @description('Resource type identifiers supported by the naming library. Keys follow the Azure Verified Naming Utility resource catalog (https://github.com/Azure/terraform-azure-avm-utl-naming); abbreviations follow the Cloud Adoption Framework recommendations (https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations) as catalogued by the Azure Periodic Table (azureperiodictable.com); length, separator and case rules follow the Azure resource naming rules (https://learn.microsoft.com/azure/azure-resource-manager/management/resource-name-rules).')
+@export()
 type resourceType = 'access_connector'
   | 'account_ai_services'
   | 'account_cognitive_services'
@@ -4202,6 +4203,28 @@ var regionCodes = {
 
 
 
+@description('Naming context for `segmentsFrom` and `resourceNameFrom`: define the core segments once (for example workload, environment, region) and pass the same object down to nested modules. All properties are optional; `region` accepts any Azure region form (`uksouth`, `uk-south`, `UK South`) and is abbreviated when names are composed. The type is sealed: unknown keys are rejected so context typos fail at build time; use the `extraSegments` parameter for additional segments.')
+@sealed()
+@export()
+type namingContext = {
+@description('Organization segment. Omit unless disambiguating globally-scoped names in estates where multiple organizations share a tenant.')
+  organization: string?
+
+@description('Workload, application, or project segment - the primary naming component per the Cloud Adoption Framework.')
+  workload: string?
+
+@description('Environment segment, for example `prod`, `dev`, `demo`.')
+  environment: string?
+
+@description('Region segment; accepts any Azure region form and is abbreviated to the short notation.')
+  region: string?
+
+@description('Component segment, for the resource role within the workload (for example `shared`, `api`).')
+  component: string?
+}
+
+
+
 @description('Resolves an Azure region to its short abbreviation. Accepts the AZ CLI name (`westeurope`), the dashed form (`west-europe`/`eu-west`) or the display name (`West Europe`), case insensitive. Anything that is not a known region passes through unchanged.')
 @export()
 func regionCode(region string) string =>
@@ -4245,18 +4268,18 @@ func compactResourceName(type resourceType, segments string[]) string =>
 
 @description('Converts a naming context object into ordered naming segments, for defining the core segments once (for example workload, environment, region) and passing them down to nested modules. Context keys, all optional and in this order: `organization`, `workload`, `environment`, `region`, `component`. The `region` key accepts any Azure region form (`uksouth`, `uk-south`, `UK South`) and is abbreviated; missing or empty keys are dropped.')
 @export()
-func segmentsFrom(context object) string[] =>
+func segmentsFrom(context namingContext) string[] =>
   filter([
-    trim(context.organization ?? '')
-    trim(context.workload ?? '')
-    trim(context.environment ?? '')
-    regionCode(trim(context.region ?? ''))
-    trim(context.component ?? '')
+    trim(context.?organization ?? '')
+    trim(context.?workload ?? '')
+    trim(context.?environment ?? '')
+    regionCode(trim(context.?region ?? ''))
+    trim(context.?component ?? '')
   ], (segment) => segment != '')
 
 @description('Composes a compliant resource name from a naming context object plus any extra segments appended after the context segments (typically the component for that resource). `context` uses the keys of `segmentsFrom` (`organization`, `workload`, `environment`, `region`, `component`, all optional); `extraSegments` may be empty. Define the context once at the top level and pass it to nested modules, which then name their resources without repeating the core segments.')
 @export()
-func resourceNameFrom(type resourceType, context object, extraSegments string[]) string =>
+func resourceNameFrom(type resourceType, context namingContext, extraSegments string[]) string =>
   resourceName(type, concat(segmentsFrom(context), extraSegments))
 
 

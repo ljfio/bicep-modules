@@ -102,7 +102,9 @@ module api 'modules/api.bicep' = {
 
 ```bicep
 // modules/api.bicep
-param namingContext object
+import * as naming from 'br/ljfio:naming:0.1.0'
+
+param namingContext naming.namingContext
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: naming.resourceNameFrom('storage_account', namingContext, ['shared'])

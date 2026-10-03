@@ -42,6 +42,19 @@ jobs:
           bicep build tests/naming.test.bicep --outfile /tmp/naming.test.json
           python3 tests/verify.py /tmp/naming.test.json
 
+      - name: Verify context typos fail at build time
+        run: |
+          cat > typo-check.bicep <<'EOF'
+          import * as naming from 'modules/naming/naming.bicep'
+
+          output bad array = naming.segmentsFrom({ worklod: 'contoso' })
+          EOF
+          if bicep build typo-check.bicep 2>typo.err; then
+            echo "ERROR: sealed context accepted an unknown key" >&2
+            exit 1
+          fi
+          grep -q "worklod" typo.err && echo "sealed context rejects typos as expected"
+
   publish:
     needs: validate
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'

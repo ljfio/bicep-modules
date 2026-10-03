@@ -90,7 +90,9 @@ module api 'modules/api.bicep' = {
 
 ```bicep
 // modules/api.bicep
-param namingContext object
+import * as naming from 'br/ljfio:naming:0.1.0'
+
+param namingContext naming.namingContext
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: naming.resourceNameFrom('storage_account', namingContext, ['shared'])
@@ -99,8 +101,17 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 ```
 
 Context keys, in order and all optional: `organization`, `workload`,
-`environment`, `region`, `component`. `segmentsFrom(context)` returns the
-ordered segment array when you need it directly.
+`environment`, `region`, `component`. The context type is sealed, so typos
+fail at build time; pass additional segments via `extraSegments`.
+`segmentsFrom(context)` returns the ordered segment array when you need it
+directly.
+
+## Exported types
+
+| Type | Description |
+|---|---|
+| `resourceType` | Union of all supported resource type keys (the first parameter of every naming function). |
+| `namingContext` | Sealed, all-optional object type with the `organization`, `workload`, `environment`, `region`, `component` keys; type your nested module parameters with it. |
 
 ## Functions
 
@@ -108,8 +119,8 @@ ordered segment array when you need it directly.
 |---|---|
 | `resourceName(type, segments string[])` | Compliant name for the type: hyphens when allowed, compact when not, lower case when required, truncated to the type's maximum length. |
 | `compactResourceName(type, segments string[])` | Same, but always compact (hyphens stripped). |
-| `resourceNameFrom(type, context object, extraSegments string[])` | As `resourceName`, building the leading segments from a naming context object; `extraSegments` (may be empty) are appended after the context segments. |
-| `segmentsFrom(context object)` | Ordered segments for a naming context object (`organization`, `workload`, `environment`, `region`, `component`, all optional; region abbreviated). |
+| `resourceNameFrom(type, context namingContext, extraSegments string[])` | As `resourceName`, building the leading segments from a naming context object; `extraSegments` (may be empty) are appended after the context segments. |
+| `segmentsFrom(context namingContext)` | Ordered segments for a naming context object (`organization`, `workload`, `environment`, `region`, `component`, all optional; region abbreviated). |
 | `resourceAbbreviation(type)` | The Cloud Adoption Framework abbreviation for the type (`resource_group` -> `rg`). |
 | `regionCode(region)` | Short abbreviation for an Azure region (`westeurope`/`West Europe` -> `euw`); unknown values pass through unchanged. |
 | `resourceNameMaxLength(type)` | Maximum name length allowed for the type (255 when undocumented). |
