@@ -28,6 +28,7 @@ EXPECTED = {
     'contextWithComponent': 'kv-contoso-demo-uks-shar',  # context-only, truncated to 24
     'contextSegments': ['contoso', 'demo', 'euw'],
     'contextFromTypedParam': 'stcontosodemouksshared',
+    'contextNullExtraSegments': 'app-contoso-demo-uks',
 }
 
 
@@ -66,13 +67,10 @@ def tokenize(expr):
             while j < len(expr) and expr[j] not in " \t\n\r(),.[]'":
                 j += 1
             word = expr[i:j]
-            if word in ('true', 'false', 'null'):
-                tokens.append(('lit', {'true': True, 'false': False, 'null': None}[word]))
-            else:
-                try:
-                    tokens.append(('num', int(word)))
-                except ValueError:
-                    tokens.append(('name', word))
+            try:
+                tokens.append(('num', int(word)))
+            except ValueError:
+                tokens.append(('name', word))
             i = j
     return tokens
 
@@ -117,6 +115,8 @@ def parse(expr):
                         args.append(primary())
                 take(')')
                 node = ('call', name, args)
+            elif name in ('true', 'false', 'null'):
+                node = ('val', {'true': True, 'false': False, 'null': None}[name])
             else:
                 node = ('name', name)
         else:
@@ -178,6 +178,8 @@ class Evaluator:
         return [self.eval(a, env) for a in args]
 
     def call(self, name, args, env):
+        if name in ('null', 'true', 'false') and not args:
+            return {'null': None, 'true': True, 'false': False}[name]
         if name in self.functions:
             spec = self.functions[name]
             values = self.eval_args(args, env)

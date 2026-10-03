@@ -24,3 +24,4 @@ output contextSegments array = naming.segmentsFrom({ workload: 'contoso', enviro
 // Exported sealed context type usable for module parameters
 param contextParam naming.namingContext = { workload: 'contoso', environment: 'demo', region: 'uksouth' }
 output contextFromTypedParam string = naming.resourceNameFrom('storage_account', contextParam, ['shared'])
+output contextNullExtraSegments string = naming.resourceNameFrom('site_web_app', contextParam, null)

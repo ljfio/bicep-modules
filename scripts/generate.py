@@ -117,15 +117,15 @@ def emit_bicep(rules, region_codes):
     for k in sorted(region_codes):
         lines.append(f"  {bicep_key(k)}: '{region_codes[k]}'")
     lines += ['}', '\n\n',
-        "@description('Naming context for `segmentsFrom` and `resourceNameFrom`: define the core segments once (for example workload, environment, region) and pass the same object down to nested modules. All properties are optional; `region` accepts any Azure region form (`uksouth`, `uk-south`, `UK South`) and is abbreviated when names are composed. The type is sealed: unknown keys are rejected so context typos fail at build time; use the `extraSegments` parameter for additional segments.')",
+        "@description('Naming context for `segmentsFrom` and `resourceNameFrom`: define the core segments once (for example workload, environment, region) and pass the same object down to nested modules. `workload` is required - it is the primary naming component per the Cloud Adoption Framework; all other keys are optional. `region` accepts any Azure region form (`uksouth`, `uk-south`, `UK South`) and is abbreviated when names are composed. The type is sealed: unknown keys are rejected so context typos fail at build time; use the `extraSegments` parameter for additional segments.')",
         '@sealed()',
         '@export()',
         'type namingContext = {',
         "@description('Organization segment. Omit unless disambiguating globally-scoped names in estates where multiple organizations share a tenant.')",
         '  organization: string?',
         '',
-        "@description('Workload, application, or project segment - the primary naming component per the Cloud Adoption Framework.')",
-        '  workload: string?',
+        "@description('Workload, application, or project segment - the primary naming component per the Cloud Adoption Framework. Required: a context without a workload produces vague, collision-prone names.')",
+        '  workload: string',
         '',
         "@description('Environment segment, for example `prod`, `dev`, `demo`.')",
         '  environment: string?',
@@ -133,7 +133,7 @@ def emit_bicep(rules, region_codes):
         "@description('Region segment; accepts any Azure region form and is abbreviated to the short notation.')",
         '  region: string?',
         '',
-        "@description('Component segment, for the resource role within the workload (for example `shared`, `api`).')",
+        "@description('Component segment, for the resource role within the workload (for example `shared`, `api`). Usually supplied per resource via the `extraSegments` parameter instead.')",
         '  component: string?',
         '}',
         '\n\n',
@@ -179,21 +179,21 @@ def emit_bicep(rules, region_codes):
         'func compactResourceName(type resourceType, segments string[]) string =>',
         "  applyLengthLimit(type, applyCase(type, replace(rawName(type, segments), '-', '')))",
         '',
-        "@description('Converts a naming context object into ordered naming segments, for defining the core segments once (for example workload, environment, region) and passing them down to nested modules. Context keys, all optional and in this order: `organization`, `workload`, `environment`, `region`, `component`. The `region` key accepts any Azure region form (`uksouth`, `uk-south`, `UK South`) and is abbreviated; missing or empty keys are dropped.')",
+        "@description('Converts a naming context object into ordered naming segments, for defining the core segments once (for example workload, environment, region) and passing them down to nested modules. Context keys, in this order: `organization`, `workload` (required), `environment`, `region`, `component`. The `region` key accepts any Azure region form (`uksouth`, `uk-south`, `UK South`) and is abbreviated; missing or empty keys are dropped.')",
         '@export()',
         'func segmentsFrom(context namingContext) string[] =>',
         '  filter([',
         "    trim(context.?organization ?? '')",
-        "    trim(context.?workload ?? '')",
+        '    trim(context.workload)',
         "    trim(context.?environment ?? '')",
         "    regionCode(trim(context.?region ?? ''))",
         "    trim(context.?component ?? '')",
         "  ], (segment) => segment != '')",
         '',
-        "@description('Composes a compliant resource name from a naming context object plus any extra segments appended after the context segments (typically the component for that resource). `context` uses the keys of `segmentsFrom` (`organization`, `workload`, `environment`, `region`, `component`, all optional); `extraSegments` may be empty. Define the context once at the top level and pass it to nested modules, which then name their resources without repeating the core segments.')",
+        "@description('Composes a compliant resource name from a naming context object plus any extra segments appended after the context segments (typically the component for that resource). `context` uses the keys of `segmentsFrom` (`organization`, `workload`, `environment`, `region`, `component`, with `workload` required and the rest optional); `extraSegments` may be null or empty. Define the context once at the top level and pass it to nested modules, which then name their resources without repeating the core segments.')",
         '@export()',
-        'func resourceNameFrom(type resourceType, context namingContext, extraSegments string[]) string =>',
-        '  resourceName(type, concat(segmentsFrom(context), extraSegments))',
+        'func resourceNameFrom(type resourceType, context namingContext, extraSegments string[]?) string =>',
+        '  resourceName(type, concat(segmentsFrom(context), extraSegments ?? []))',
         '',
         '',
     ]
@@ -312,18 +312,18 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {{
 }}
 ```
 
-Context keys, in order and all optional: `organization`, `workload`,
-`environment`, `region`, `component`. The context type is sealed, so typos
-fail at build time; pass additional segments via `extraSegments`.
-`segmentsFrom(context)` returns the ordered segment array when you need it
-directly.
+Context keys, in this order: `organization`, `workload` (required),
+`environment`, `region`, `component` - all but `workload` optional. The context
+type is sealed, so typos fail at build time; pass additional segments via
+`extraSegments` (which may be null). `segmentsFrom(context)` returns the ordered
+segment array when you need it directly.
 
 ## Exported types
 
 | Type | Description |
 |---|---|
 | `resourceType` | Union of all supported resource type keys (the first parameter of every naming function). |
-| `namingContext` | Sealed, all-optional object type with the `organization`, `workload`, `environment`, `region`, `component` keys; type your nested module parameters with it. |
+| `namingContext` | Sealed object type with the `organization`, `workload` (required), `environment`, `region`, `component` (optional) keys; type your nested module parameters with it. |
 
 ## Functions
 
@@ -331,8 +331,8 @@ directly.
 |---|---|
 | `resourceName(type, segments string[])` | Compliant name for the type: hyphens when allowed, compact when not, lower case when required, truncated to the type's maximum length. |
 | `compactResourceName(type, segments string[])` | Same, but always compact (hyphens stripped). |
-| `resourceNameFrom(type, context namingContext, extraSegments string[])` | As `resourceName`, building the leading segments from a naming context object; `extraSegments` (may be empty) are appended after the context segments. |
-| `segmentsFrom(context namingContext)` | Ordered segments for a naming context object (`organization`, `workload`, `environment`, `region`, `component`, all optional; region abbreviated). |
+| `resourceNameFrom(type, context namingContext, extraSegments string[]?)` | As `resourceName`, building the leading segments from a naming context object; `extraSegments` (null or empty for none) are appended after the context segments. |
+| `segmentsFrom(context namingContext)` | Ordered segments for a naming context object (`organization`, required `workload`, optional `environment`, `region`, `component`; region abbreviated). |
 | `resourceAbbreviation(type)` | The Cloud Adoption Framework abbreviation for the type (`resource_group` -> `rg`). |
 | `regionCode(region)` | Short abbreviation for an Azure region (`westeurope`/`West Europe` -> `euw`); unknown values pass through unchanged. |
 | `resourceNameMaxLength(type)` | Maximum name length allowed for the type (255 when undocumented). |
