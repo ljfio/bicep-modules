@@ -36,10 +36,14 @@ breaking changes to the exported function signatures.
 
 ## Consuming
 
-Add a `bicepconfig.json` next to the consuming Bicep files:
+Add a `bicepconfig.json` next to the consuming Bicep files (`ociEnabled` is
+required for non-Azure registries such as ghcr.io):
 
 ```json
 {
+  "experimentalFeaturesEnabled": {
+    "ociEnabled": true
+  },
   "moduleAliases": {
     "br": {
       "ljfio": {
