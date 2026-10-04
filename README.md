@@ -6,6 +6,7 @@ artifacts and consumed with Bicep module aliases.
 | Module | Path | Description |
 |---|---|---|
 | [naming](modules/naming/README.md) | `br:ghcr.io/ljfio/bicep-modules/naming:<version>` | Resource name functions compliant with each resource type's naming rules |
+| [env](modules/env/README.md) | `br:ghcr.io/ljfio/bicep-modules/env:<version>` | Environment tier policies as data: derive per-environment settings from one string |
 
 ## Modules
 
@@ -17,6 +18,15 @@ rules automatically: hyphens vs compact join, lower case, and maximum name
 length. Type abbreviations follow the Cloud Adoption Framework; region
 abbreviations cover every Azure region. See the
 [module README](modules/naming/README.md) for the full API and catalogue.
+
+### env
+
+Environment tier policies as data: pass one string (`dev`, `test`, `uat`,
+`stage`, `prod`, `demo`) and get a policy object (`isProduction`,
+`haRequired`, `replicas`, `extra`) with override-friendly defaults, so modules
+stop scattering ternaries. Defaults are documented conventions to override,
+not claims about Azure. See the [module README](modules/env/README.md) for the
+full API and tier catalogue.
 
 ## Publishing
 

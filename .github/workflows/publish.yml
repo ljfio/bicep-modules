@@ -45,6 +45,17 @@ jobs:
       - name: Boundary test - module compiles into an ordinary ARM template
         run: bicep build tests/naming.test.bicep --stdout > /dev/null
 
+      - name: Lint env module
+        run: bicep lint modules/env/env.bicep
+
+      - name: Unit tests - evaluate env functions against the golden file
+        run: |
+          bicep build-params tests/env.test.bicepparam --outfile /tmp/env.test.json
+          python3 tests/compare.py /tmp/env.test.json tests/env.test.expected.json
+
+      - name: Boundary test - env module compiles into an ordinary ARM template
+        run: bicep build tests/env.test.bicep --stdout > /dev/null
+
       - name: Negative tests - invalid inputs fail at build time
         run: python3 tests/negative.py
 
@@ -81,3 +92,9 @@ jobs:
           bicep publish modules/naming/naming.bicep \
             --target "br:ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/bicep-modules/naming:$VERSION" \
             --documentation-uri "https://github.com/${GITHUB_REPOSITORY}/tree/main/modules/naming"
+
+      - name: Publish env module
+        run: |
+          bicep publish modules/env/env.bicep \
+            --target "br:ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/bicep-modules/env:$VERSION" \
+            --documentation-uri "https://github.com/${GITHUB_REPOSITORY}/tree/main/modules/env"
