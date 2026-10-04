@@ -127,9 +127,11 @@ bicep-modules/
 │       ├── naming.bicep        (hand-written: naming functions and namingContext type)
 │       ├── rules.bicep         (generated: resource type keys and per-type rules)
 │       ├── regions.bicep       (generated: Azure region abbreviations)
-│       └── README.md           (generated: API, region + resource type catalogue)
+│       ├── README.md           (generated: API and usage docs)
+│       ├── resource-types.md   (generated: resource type catalogue)
+│       └── regions.md          (generated: region abbreviation catalogue)
 ├── scripts/
-│   └── generate.py             (regenerates rules.bicep, regions.bicep, README)
+│   └── generate.py             (regenerates the generated files above)
 ├── tests/
 │   ├── naming.test.bicep       (using-target for the unit tests; boundary smoke template)
 │   ├── naming.test.bicepparam  (unit tests: one naming assertion per parameter)
