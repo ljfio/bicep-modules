@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "fullContextTags": {
+      "value": {
+        "Workload": "contoso",
+        "Environment": "prod",
+        "Region": "UK South",
+        "Organization": "platform",
+        "Component": "api",
+        "Owner": "platform-team",
+        "CostCenter": "cc-123"
+      }
+    },
+    "partialContextTags": {
+      "value": {
+        "Workload": "contoso",
+        "Region": "westeurope"
+      }
+    },
+    "emptyOptionalTags": {
+      "value": {
+        "Workload": "contoso"
+      }
+    },
+    "trimmedValuesTags": {
+      "value": {
+        "Workload": "contoso",
+        "Owner": "team@contoso.com"
+      }
+    },
+    "mergedOverrideTags": {
+      "value": {
+        "Workload": "contoso",
+        "Environment": "dev",
+        "Region": "westeurope",
+        "Owner": "platform-team"
+      }
+    },
+    "mergedEmptyOverrideTags": {
+      "value": {
+        "Workload": "contoso",
+        "Environment": "prod"
+      }
+    },
+    "mergedNestedReplaceTags": {
+      "value": {
+        "Extra": {
+          "b": 2
+        }
+      }
+    },
+    "composedTags": {
+      "value": {
+        "Workload": "contoso",
+        "Environment": "demo",
+        "Region": "uksouth",
+        "Component": "shared"
+      }
+    }
+  }
+}
