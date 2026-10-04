@@ -1,5 +1,7 @@
 {
   "context-missing-workload.bicep": "workload",
   "context-typo.bicep": "worklod",
-  "unknown-type-key.bicep": "storage_acount"
+  "unknown-type-key.bicep": "storage_acount",
+  "tags-context-missing-workload.bicep": "workload",
+  "tags-context-typo.bicep": "worklod"
 }

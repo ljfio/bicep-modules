@@ -37,13 +37,24 @@ jobs:
       - name: Lint naming module
         run: bicep lint modules/naming/naming.bicep
 
+      - name: Lint tags module
+        run: bicep lint modules/tags/tags.bicep
+
       - name: Unit tests - evaluate naming functions against the golden file
         run: |
           bicep build-params tests/naming.test.bicepparam --outfile /tmp/naming.test.json
           python3 tests/compare.py /tmp/naming.test.json tests/naming.test.expected.json
 
+      - name: Unit tests - evaluate tags functions against the golden file
+        run: |
+          bicep build-params tests/tags.test.bicepparam --outfile /tmp/tags.test.json
+          python3 tests/compare.py /tmp/tags.test.json tests/tags.test.expected.json
+
       - name: Boundary test - module compiles into an ordinary ARM template
         run: bicep build tests/naming.test.bicep --stdout > /dev/null
+
+      - name: Boundary test - tags module compiles into an ordinary ARM template
+        run: bicep build tests/tags.test.bicep --stdout > /dev/null
 
       - name: Negative tests - invalid inputs fail at build time
         run: python3 tests/negative.py
@@ -81,3 +92,9 @@ jobs:
           bicep publish modules/naming/naming.bicep \
             --target "br:ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/bicep-modules/naming:$VERSION" \
             --documentation-uri "https://github.com/${GITHUB_REPOSITORY}/tree/main/modules/naming"
+
+      - name: Publish tags module
+        run: |
+          bicep publish modules/tags/tags.bicep \
+            --target "br:ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/bicep-modules/tags:$VERSION" \
+            --documentation-uri "https://github.com/${GITHUB_REPOSITORY}/tree/main/modules/tags"

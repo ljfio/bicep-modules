@@ -6,6 +6,7 @@ artifacts and consumed with Bicep module aliases.
 | Module | Path | Description |
 |---|---|---|
 | [naming](modules/naming/README.md) | `br:ghcr.io/ljfio/bicep-modules/naming:<version>` | Resource name functions compliant with each resource type's naming rules |
+| [tags](modules/tags/README.md) | `br:ghcr.io/ljfio/bicep-modules/tags:<version>` | Standard tag bag functions from a naming-like context |
 
 ## Modules
 
@@ -17,6 +18,14 @@ rules automatically: hyphens vs compact join, lower case, and maximum name
 length. Type abbreviations follow the Cloud Adoption Framework; region
 abbreviations cover every Azure region. See the
 [module README](modules/naming/README.md) for the full API and catalogue.
+
+### tags
+
+Composes the standard Azure tag bag - PascalCase keys per the Cloud Adoption
+Framework (`Workload`, `Environment`, `Region`, `Organization`, `Component`,
+`Owner`, `CostCenter`) - from the same context object that feeds the naming
+module, and merges tag objects with override-wins semantics. See the
+[module README](modules/tags/README.md) for the full API.
 
 ## Publishing
 
