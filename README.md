@@ -131,8 +131,12 @@ bicep-modules/
 ├── scripts/
 │   └── generate.py             (regenerates rules.bicep, regions.bicep, README)
 ├── tests/
-│   ├── naming.test.bicep       (template exercising every export)
-│   └── verify.py               (evaluates the compiled template, asserts names)
+│   ├── naming.test.bicep       (using-target for the unit tests; boundary smoke template)
+│   ├── naming.test.bicepparam  (unit tests: one naming assertion per parameter)
+│   ├── naming.test.expected.json (golden results the assertions must produce)
+│   ├── compare.py              (diffs compiled parameters against the golden file)
+│   ├── negative.py             (runs the negative compile tests)
+│   └── negative/               (invalid inputs that must fail to build)
 ├── bicepconfig.json
 └── .github/workflows/publish.yml
 ```
@@ -140,3 +144,20 @@ bicep-modules/
 `naming.bicep` imports the generated data files and re-exports the combined
 surface; publishing compiles the three files into a single self-contained
 artifact. CI regenerates the generated files and fails on drift.
+
+## Testing
+
+The Bicep-to-ARM boundary is trusted and only smoke-tested: the test template
+imports the module and compiles to ARM. Naming behavior is unit-tested instead:
+
+- `naming.test.bicepparam` computes every assertion with the naming functions;
+  `bicep build-params` evaluates them with the Bicep engine itself (the same
+  expression semantics as the ARM runtime), and `compare.py` diffs the
+  compiled parameters against the golden file. Parameter types in the
+  using-target double as return-type assertions.
+- `tests/negative/` holds inputs that must fail to build (context typos,
+  missing workload, unknown type keys), driven by `negative.py` and a manifest.
+
+This caught real bugs an expression-mock evaluator had masked: ARM errors on
+missing object keys even inside `coalesce`, so lookups now use safe access
+(`[?...]`, `.?`) where keys may be absent.

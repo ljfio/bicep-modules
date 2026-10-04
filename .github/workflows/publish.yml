@@ -29,7 +29,7 @@ jobs:
           sudo mv bicep /usr/local/bin/bicep
           bicep --version
 
-      - name: Check generated module is up to date
+      - name: Check generated module files are up to date
         run: |
           python3 scripts/generate.py
           git diff --exit-code -- modules/naming/
@@ -37,26 +37,16 @@ jobs:
       - name: Lint naming module
         run: bicep lint modules/naming/naming.bicep
 
-      - name: Build test template and verify naming functions
+      - name: Unit tests - evaluate naming functions against the golden file
         run: |
-          bicep build tests/naming.test.bicep --outfile /tmp/naming.test.json
-          python3 tests/verify.py /tmp/naming.test.json
+          bicep build-params tests/naming.test.bicepparam --outfile /tmp/naming.test.json
+          python3 tests/compare.py /tmp/naming.test.json tests/naming.test.expected.json
 
-      - name: Verify context typos and missing workload fail at build time
-        run: |
-          cat > typo-check.bicep <<'EOF'
-          import * as naming from 'modules/naming/naming.bicep'
+      - name: Boundary test - module compiles into an ordinary ARM template
+        run: bicep build tests/naming.test.bicep --stdout > /dev/null
 
-          output bad array = naming.segmentsFrom({ worklod: 'contoso' })
-          output worse array = naming.segmentsFrom({ environment: 'prod' })
-          EOF
-          if bicep build typo-check.bicep 2>typo.err; then
-            echo "ERROR: sealed context accepted an invalid context" >&2
-            exit 1
-          fi
-          grep -q "worklod" typo.err
-          grep -q "required properties: \"workload\"" typo.err
-          echo "sealed context rejects typos and missing workload as expected"
+      - name: Negative tests - invalid inputs fail at build time
+        run: python3 tests/negative.py
 
   publish:
     needs: validate

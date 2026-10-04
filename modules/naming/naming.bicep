@@ -28,7 +28,7 @@ type namingContext = {
 @description('Resolves an Azure region to its short abbreviation. Accepts the AZ CLI name (`westeurope`), the dashed form (`west-europe`/`eu-west`) or the display name (`West Europe`), case insensitive. Anything that is not a known region passes through unchanged.')
 @export()
 func regionCode(region string) string =>
-  regionCodes[toLower(replace(region, ' ', '-'))] ?? region
+  regionCodes[?toLower(replace(region, ' ', '-'))] ?? region
 
 @description('Returns the Cloud Adoption Framework abbreviation for a resource type (for example `resource_group` -> `rg`).')
 @export()
@@ -38,7 +38,7 @@ func resourceAbbreviation(type resourceType) string =>
 @description('Returns the maximum name length allowed for the resource type, or 255 when no limit is documented.')
 @export()
 func resourceNameMaxLength(type resourceType) int =>
-  nameRules[type].max ?? 255
+  nameRules[type].?max ?? 255
 
 @description('Trims the naming segments, resolves any segment naming an Azure region to its abbreviation, and drops empty segments.')
 func normalizeSegments(segments string[]) string[] =>
@@ -54,7 +54,7 @@ func applyCase(type resourceType, name string) string =>
 
 @description('Truncates the name to the maximum length allowed for the resource type when it would exceed the limit.')
 func applyLengthLimit(type resourceType, name string) string =>
-  take(name, nameRules[type].max ?? 255)
+  take(name, nameRules[type].?max ?? 255)
 
 @description('Composes a resource name that complies with the rules of the resource type: the type abbreviation followed by the naming segments (typically workload, environment, region, component, in any number), hyphen delimited when the type allows hyphens, lower cased when the type requires it, and truncated to the type name limit when needed. Any segment naming an Azure region (`uksouth`, `UK South`) is abbreviated to its short form (`uks`). Pass only the segments you need; empty segments are dropped.')
 @export()

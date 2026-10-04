@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "hyphenTypeName": {
+      "value": "app-contoso-demo-uks-api"
+    },
+    "compactTypeName": {
+      "value": "stcontosodemouksshared"
+    },
+    "lowercaseTypeName": {
+      "value": "cosmos-contoso-demo-uks-shared"
+    },
+    "truncatedStorageName": {
+      "value": "stcontosodemoukssharedlo"
+    },
+    "truncatedKeyVaultName": {
+      "value": "kv-contoso-demo-uks-shar"
+    },
+    "forcedCompactName": {
+      "value": "appcontosodemouksapi"
+    },
+    "regionFromCliName": {
+      "value": "euw"
+    },
+    "regionFromDisplayName": {
+      "value": "euw"
+    },
+    "unknownRegionName": {
+      "value": "notaregion"
+    },
+    "abbreviation": {
+      "value": "rg"
+    },
+    "maxLength": {
+      "value": 24
+    },
+    "segmentArrayOrder": {
+      "value": "app-contoso-demo-uks-api-web"
+    },
+    "contextTypeName": {
+      "value": "stcontosodemouksshared"
+    },
+    "contextPartialName": {
+      "value": "rg-contoso-uks-app"
+    },
+    "contextComponentName": {
+      "value": "kv-contoso-demo-uks-shar"
+    },
+    "contextOrganizationName": {
+      "value": "rg-platform-contoso-uks"
+    },
+    "contextNullExtrasName": {
+      "value": "app-contoso-demo-uks"
+    },
+    "contextSegments": {
+      "value": [
+        "contoso",
+        "euw"
+      ]
+    },
+    "noLimitTypeName": {
+      "value": "cldcontosodemouks"
+    },
+    "noLimitMaxLength": {
+      "value": 255
+    }
+  }
+}
