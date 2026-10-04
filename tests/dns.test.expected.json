@@ -1,0 +1,71 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageBlobZone": {
+      "value": "privatelink.blob.core.windows.net"
+    },
+    "storageFileZone": {
+      "value": "privatelink.file.core.windows.net"
+    },
+    "keyVaultZone": {
+      "value": "privatelink.vaultcore.azure.net"
+    },
+    "sqlServerZone": {
+      "value": "privatelink.database.windows.net"
+    },
+    "postgresqlZone": {
+      "value": "privatelink.postgres.database.azure.com"
+    },
+    "mysqlZone": {
+      "value": "privatelink.mysql.database.azure.com"
+    },
+    "eventHubsZone": {
+      "value": "privatelink.servicebus.windows.net"
+    },
+    "serviceBusZone": {
+      "value": "privatelink.servicebus.windows.net"
+    },
+    "containerRegistryZone": {
+      "value": "privatelink.azurecr.io"
+    },
+    "cosmosDbZone": {
+      "value": "privatelink.documents.azure.com"
+    },
+    "cosmosMongoZone": {
+      "value": "privatelink.mongo.cosmos.azure.com"
+    },
+    "webAppZone": {
+      "value": "privatelink.azurewebsites.net"
+    },
+    "slotZone": {
+      "value": "privatelink.azurewebsites.net"
+    },
+    "redisZone": {
+      "value": "privatelink.redis.cache.windows.net"
+    },
+    "dataFactoryZone": {
+      "value": "privatelink.datafactory.azure.net"
+    },
+    "storageZones": {
+      "value": [
+        "privatelink.blob.core.windows.net",
+        "privatelink.dfs.core.windows.net",
+        "privatelink.file.core.windows.net",
+        "privatelink.queue.core.windows.net",
+        "privatelink.table.core.windows.net"
+      ]
+    },
+    "storageZoneCount": {
+      "value": 5
+    },
+    "keyVaultZones": {
+      "value": [
+        "privatelink.vaultcore.azure.net"
+      ]
+    },
+    "unknownTypeZones": {
+      "value": []
+    }
+  }
+}

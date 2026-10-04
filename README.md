@@ -6,6 +6,7 @@ artifacts and consumed with Bicep module aliases.
 | Module | Path | Description |
 |---|---|---|
 | [naming](modules/naming/README.md) | `br:ghcr.io/ljfio/bicep-modules/naming:<version>` | Resource name functions compliant with each resource type's naming rules |
+| [dns](modules/dns/README.md) | `br:ghcr.io/ljfio/bicep-modules/dns:<version>` | Private Endpoint Private DNS zone names for each resource type |
 
 ## Modules
 
@@ -118,11 +119,25 @@ the Cloud Adoption Framework puts organization and team structure in management
 groups, subscriptions, and tags rather than in resource names; see the
 [module README](modules/naming/README.md) for the full rationale and API.
 
+### dns
+
+Maps resource types to the Private DNS zone names Azure requires for Private
+Endpoints (`storage_account_blob` -> `privatelink.blob.core.windows.net`), so
+consumers stop hand-writing zone lists. Zone names follow the Microsoft Learn
+private endpoint DNS configuration appendix; type keys match the naming
+module's resource type keys. See the
+[module README](modules/dns/README.md) for the full API and zone catalogue.
+
 ## Layout
 
 ```
 bicep-modules/
 ├── modules/
+│   ├── dns/
+│   │   ├── dns.bicep             (hand-written: private DNS zone functions)
+│   │   ├── zones.bicep           (generated: private DNS zone keys and zone map)
+│   │   ├── zones.md              (generated: private DNS zone catalogue)
+│   │   └── README.md             (hand-written: API and usage docs)
 │   └── naming/
 │       ├── naming.bicep        (hand-written: naming functions and namingContext type)
 │       ├── rules.bicep         (generated: resource type keys and per-type rules)
@@ -131,11 +146,15 @@ bicep-modules/
 │       ├── resource-types.md   (generated: resource type catalogue)
 │       └── regions.md          (generated: region abbreviation catalogue)
 ├── scripts/
-│   └── generate.py             (regenerates the generated files above)
+│   ├── generate.py             (regenerates the naming module's generated files)
+│   └── generate_dns.py         (regenerates the dns module's generated files)
 ├── tests/
 │   ├── naming.test.bicep       (using-target for the unit tests; boundary smoke template)
 │   ├── naming.test.bicepparam  (unit tests: one naming assertion per parameter)
 │   ├── naming.test.expected.json (golden results the assertions must produce)
+│   ├── dns.test.bicep          (using-target for the unit tests; boundary smoke template)
+│   ├── dns.test.bicepparam     (unit tests: one dns assertion per parameter)
+│   ├── dns.test.expected.json  (golden results the assertions must produce)
 │   ├── compare.py              (diffs compiled parameters against the golden file)
 │   ├── negative.py             (runs the negative compile tests)
 │   └── negative/               (invalid inputs that must fail to build)
@@ -143,9 +162,9 @@ bicep-modules/
 └── .github/workflows/publish.yml
 ```
 
-`naming.bicep` imports the generated data files and re-exports the combined
-surface; publishing compiles the three files into a single self-contained
-artifact. CI regenerates the generated files and fails on drift.
+`naming.bicep` and `dns.bicep` import the generated data files and re-export
+the combined surface; publishing compiles the module's files into a single
+self-contained artifact. CI regenerates the generated files and fails on drift.
 
 ## Testing
 
