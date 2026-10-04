@@ -127,7 +127,7 @@ bicep-modules/
 │       ├── naming.bicep        (hand-written: naming functions and namingContext type)
 │       ├── rules.bicep         (generated: resource type keys and per-type rules)
 │       ├── regions.bicep       (generated: Azure region abbreviations)
-│       ├── README.md           (generated: API and usage docs)
+│       ├── README.md           (hand-written: API and usage docs)
 │       ├── resource-types.md   (generated: resource type catalogue)
 │       └── regions.md          (generated: region abbreviation catalogue)
 ├── scripts/
