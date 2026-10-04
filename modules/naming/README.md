@@ -21,7 +21,7 @@ Repository layout: `naming.bicep` and this README are hand-written;
 ## Usage
 
 ```bicep
-import * as naming from 'br/ljfio:naming:0.2.0'
+import * as naming from 'br/ljfio:naming:0.3.0'
 
 var segments = ['contoso', 'demo', 'uksouth', 'shared']
 
@@ -95,7 +95,7 @@ module api 'modules/api.bicep' = {
 
 ```bicep
 // modules/api.bicep
-import * as naming from 'br/ljfio:naming:0.2.0'
+import * as naming from 'br/ljfio:naming:0.3.0'
 
 param namingContext naming.namingContext
 
@@ -111,12 +111,51 @@ type is sealed, so typos fail at build time; pass additional segments via
 `extraSegments` (which may be null). `segmentsFrom(context)` returns the ordered
 segment array when you need it directly.
 
+## Deriving contexts with mergeContext
+
+Define a base context once and derive variants instead of rebuilding the whole
+context at each call site: `mergeContext(base, overrides)` returns a new
+naming context where every set key of `overrides` replaces the base value.
+
+```bicep
+param workload string = 'contoso'
+
+// The base context: one definition, used everywhere.
+var baseContext = {
+  workload: workload
+  environment: 'demo'
+  region: 'uksouth'
+}
+
+// Per-deployment variations, without repeating the base keys.
+var prodContext = naming.mergeContext(baseContext, {
+  environment: 'prod'
+  region: 'westeurope'
+})
+
+// A component-scoped context for a nested module.
+var apiContext = naming.mergeContext(baseContext, { component: 'api' })
+```
+
+Semantics, key by key:
+
+- a key that is **set** in the overrides replaces the base value;
+- a key that is **absent or null** keeps the base value;
+- a key set to **an empty string** removes that segment from the merged context
+  (`segmentsFrom` drops empty segments).
+
+All five keys are overridable, including `workload`. The override type is
+sealed, so typos fail at build time. Typical uses: switching environment and
+region per deployment, adding a `component` for a nested module, or clearing a
+segment that only some deployments use.
+
 ## Exported types
 
 | Type | Description |
 |---|---|
 | `resourceType` | Union of all supported resource type keys (the first parameter of every naming function). |
 | `namingContext` | Sealed object type with the `organization`, `workload` (required), `environment`, `region`, `component` (optional) keys; type your nested module parameters with it. |
+| `namingContextOverride` | Sealed object type with the same keys, all optional (including `workload`); the second parameter of `mergeContext`. |
 
 ## Functions
 
@@ -125,6 +164,7 @@ segment array when you need it directly.
 | `resourceName(type, segments string[])` | Compliant name for the type: hyphens when allowed, compact when not, lower case when required, truncated to the type's maximum length. |
 | `compactResourceName(type, segments string[])` | Same, but always compact (hyphens stripped). |
 | `resourceNameFrom(type, context namingContext, extraSegments string[]?)` | As `resourceName`, building the leading segments from a naming context object; `extraSegments` (null or empty for none) are appended after the context segments. |
+| `mergeContext(base namingContext, overrides namingContextOverride)` | New naming context with each set override key replacing the base value; absent/null overrides keep the base, and an empty string clears the segment. |
 | `segmentsFrom(context namingContext)` | Ordered segments for a naming context object (`organization`, required `workload`, optional `environment`, `region`, `component`; region abbreviated). |
 | `resourceAbbreviation(type)` | The Cloud Adoption Framework abbreviation for the type (`resource_group` -> `rg`). |
 | `regionCode(region)` | Short abbreviation for an Azure region (`westeurope`/`West Europe` -> `euw`); unknown values pass through unchanged. |

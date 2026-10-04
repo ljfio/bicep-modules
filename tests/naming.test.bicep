@@ -26,6 +26,11 @@ param contextComponentName string
 param contextOrganizationName string
 param contextNullExtrasName string
 param contextSegments array
+param mergedContext naming.namingContext
+param mergedContextName string
+param mergedContextSegments array
+param mergedClearedEnvironmentName string
+param mergedNullOverrideKeepsBaseSegments array
 
 // Boundary smoke test: compiling this template proves the module's exported
 // functions inline into an ordinary ARM template and compose in template
@@ -54,4 +59,9 @@ output assignedValues object = {
   contextOrganizationName: contextOrganizationName
   contextNullExtrasName: contextNullExtrasName
   contextSegments: contextSegments
+  mergedContext: mergedContext
+  mergedContextName: mergedContextName
+  mergedContextSegments: mergedContextSegments
+  mergedClearedEnvironmentName: mergedClearedEnvironmentName
+  mergedNullOverrideKeepsBaseSegments: mergedNullOverrideKeepsBaseSegments
 }

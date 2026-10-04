@@ -58,7 +58,7 @@ required for non-Azure registries such as ghcr.io):
 Then import the naming functions:
 
 ```bicep
-import * as naming from 'br/ljfio:naming:0.2.0'
+import * as naming from 'br/ljfio:naming:0.3.0'
 
 var segments = ['contoso', 'demo', 'uksouth', 'shared']
 
@@ -102,7 +102,7 @@ module api 'modules/api.bicep' = {
 
 ```bicep
 // modules/api.bicep
-import * as naming from 'br/ljfio:naming:0.2.0'
+import * as naming from 'br/ljfio:naming:0.3.0'
 
 param namingContext naming.namingContext
 
@@ -115,7 +115,8 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 Context keys, in order and all optional: `organization`, `workload`,
 `environment`, `region`, `component`. Keep resource names workload-centric —
 the Cloud Adoption Framework puts organization and team structure in management
-groups, subscriptions, and tags rather than in resource names; see the
+groups, subscriptions, and tags rather than in resource names. `mergeContext`
+derives context variants from a base without repeating keys; see the
 [module README](modules/naming/README.md) for the full rationale and API.
 
 ## Layout
