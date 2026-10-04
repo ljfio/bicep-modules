@@ -1,5 +1,5 @@
 import { resourceType as resourceTypeRules, nameRules } from 'rules.bicep'
-import { regionCodes } from 'regions.bicep'
+import { regionCodes } from '../regions/regions-data.bicep'
 
 @description('Resource type identifiers supported by the naming library; re-exported from rules.bicep for consumers. See the generated module README for the full catalogue and the naming rules per type.')
 @export()
@@ -25,7 +25,7 @@ type namingContext = {
   component: string?
 }
 
-@description('Resolves an Azure region to its short abbreviation. Accepts the AZ CLI name (`westeurope`), the dashed form (`west-europe`/`eu-west`) or the display name (`West Europe`), case insensitive. Anything that is not a known region passes through unchanged.')
+@description('Resolves an Azure region to its short abbreviation. Accepts the AZ CLI name (`westeurope`), the dashed form (`west-europe`/`eu-west`) or the display name (`West Europe`), case insensitive. Anything that is not a known region passes through unchanged. Kept for compatibility; the canonical home of the region lookup is the regions module (`br/ljfio:regions`), which also exports paired-region and geography lookups.')
 @export()
 func regionCode(region string) string =>
   regionCodes[?toLower(replace(region, ' ', '-'))] ?? region

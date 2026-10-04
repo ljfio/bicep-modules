@@ -2,9 +2,8 @@
 
 Azure region abbreviations following the
 [claranet region naming standard](https://github.com/claranet/terraform-azurerm-regions).
-The naming functions accept the AZ CLI name, the dashed form or the display
-name as the region segment (for example `uksouth`, `uk-south` or `UK South`),
-all case insensitive.
+The region functions accept the AZ CLI name, the dashed form or the display
+name (for example `uksouth`, `uk-south` or `UK South`), all case insensitive.
 
 | Region | AZ CLI name | Abbreviation | Paired region |
 |---|---|---|---|
