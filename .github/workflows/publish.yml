@@ -34,16 +34,32 @@ jobs:
           python3 scripts/generate.py
           git diff --exit-code -- modules/naming/
 
+      - name: Check generated ids module files are up to date
+        run: |
+          python3 scripts/generate_ids.py
+          git diff --exit-code -- modules/ids/
+
       - name: Lint naming module
         run: bicep lint modules/naming/naming.bicep
+
+      - name: Lint ids module
+        run: bicep lint modules/ids/ids.bicep
 
       - name: Unit tests - evaluate naming functions against the golden file
         run: |
           bicep build-params tests/naming.test.bicepparam --outfile /tmp/naming.test.json
           python3 tests/compare.py /tmp/naming.test.json tests/naming.test.expected.json
 
+      - name: Unit tests - evaluate ids functions against the golden file
+        run: |
+          bicep build-params tests/ids.test.bicepparam --outfile /tmp/ids.test.json
+          python3 tests/compare.py /tmp/ids.test.json tests/ids.test.expected.json
+
       - name: Boundary test - module compiles into an ordinary ARM template
         run: bicep build tests/naming.test.bicep --stdout > /dev/null
+
+      - name: Boundary test - ids module compiles into an ordinary ARM template
+        run: bicep build tests/ids.test.bicep --stdout > /dev/null
 
       - name: Negative tests - invalid inputs fail at build time
         run: python3 tests/negative.py
@@ -81,3 +97,9 @@ jobs:
           bicep publish modules/naming/naming.bicep \
             --target "br:ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/bicep-modules/naming:$VERSION" \
             --documentation-uri "https://github.com/${GITHUB_REPOSITORY}/tree/main/modules/naming"
+
+      - name: Publish ids module
+        run: |
+          bicep publish modules/ids/ids.bicep \
+            --target "br:ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/bicep-modules/ids:$VERSION" \
+            --documentation-uri "https://github.com/${GITHUB_REPOSITORY}/tree/main/modules/ids"

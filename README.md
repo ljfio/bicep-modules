@@ -6,6 +6,7 @@ artifacts and consumed with Bicep module aliases.
 | Module | Path | Description |
 |---|---|---|
 | [naming](modules/naming/README.md) | `br:ghcr.io/ljfio/bicep-modules/naming:<version>` | Resource name functions compliant with each resource type's naming rules |
+| [ids](modules/ids/README.md) | `br:ghcr.io/ljfio/bicep-modules/ids:<version>` | Typed ARM resource ID builders for common resource types |
 
 ## Modules
 
@@ -17,6 +18,15 @@ rules automatically: hyphens vs compact join, lower case, and maximum name
 length. Type abbreviations follow the Cloud Adoption Framework; region
 abbreviations cover every Azure region. See the
 [module README](modules/naming/README.md) for the full API and catalogue.
+
+### ids
+
+Builds fully qualified ARM resource IDs from the same type keys the naming
+module uses: `armResourceId` composes the ID in the deployment's resource
+group, `armResourceIdIn` in an explicit subscription and resource group, and
+`providerType` returns the `Microsoft.X/y` provider type string. Provider
+type strings are verified against the Microsoft Learn ARM reference. See the
+[module README](modules/ids/README.md) for the full API and catalogue.
 
 ## Publishing
 
