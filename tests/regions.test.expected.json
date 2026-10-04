@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "regionFromCliName": {
+      "value": "euw"
+    },
+    "regionFromDisplayName": {
+      "value": "euw"
+    },
+    "regionFromDashedName": {
+      "value": "uks"
+    },
+    "unknownRegionCode": {
+      "value": "notaregion"
+    },
+    "regionCodeParityWithNaming": {
+      "value": true
+    },
+    "pairedKnownRegion": {
+      "value": "ukwest"
+    },
+    "pairedFromDisplayName": {
+      "value": "ukwest"
+    },
+    "pairedCrossContinentRegion": {
+      "value": "southcentralus"
+    },
+    "pairedNoPairRegion": {
+      "value": ""
+    },
+    "unknownPairedRegion": {
+      "value": ""
+    },
+    "geographyEurope": {
+      "value": "Europe"
+    },
+    "geographyNorthAmerica": {
+      "value": "North America"
+    },
+    "geographyAsiaPacific": {
+      "value": "Asia Pacific"
+    },
+    "unknownGeography": {
+      "value": ""
+    }
+  }
+}

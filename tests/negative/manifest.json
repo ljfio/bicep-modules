@@ -1,5 +1,7 @@
 {
   "context-missing-workload.bicep": "workload",
   "context-typo.bicep": "worklod",
-  "unknown-type-key.bicep": "storage_acount"
+  "unknown-type-key.bicep": "storage_acount",
+  "regions-wrong-region-type.bicep": "Argument of type \"123\" is not assignable",
+  "regions-null-region.bicep": "Argument of type \"null\" is not assignable"
 }

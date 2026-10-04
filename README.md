@@ -6,6 +6,7 @@ artifacts and consumed with Bicep module aliases.
 | Module | Path | Description |
 |---|---|---|
 | [naming](modules/naming/README.md) | `br:ghcr.io/ljfio/bicep-modules/naming:<version>` | Resource name functions compliant with each resource type's naming rules |
+| [regions](modules/regions/README.md) | `br:ghcr.io/ljfio/bicep-modules/regions:<version>` | Azure region lookups: abbreviation, paired region and geography |
 
 ## Modules
 
@@ -17,6 +18,15 @@ rules automatically: hyphens vs compact join, lower case, and maximum name
 length. Type abbreviations follow the Cloud Adoption Framework; region
 abbreviations cover every Azure region. See the
 [module README](modules/naming/README.md) for the full API and catalogue.
+
+### regions
+
+Resolves Azure regions from any region form (`uksouth`, `uk-south`,
+`UK South`): the short abbreviation (`regionCode`, the canonical home of the
+lookup that naming re-exports), the paired region (`pairedRegion`) and the
+Azure geography (`geography`). Paired-region and geography data is curated
+against Microsoft Learn. See the
+[module README](modules/regions/README.md) for the full API and catalogues.
 
 ## Publishing
 
@@ -123,29 +133,39 @@ groups, subscriptions, and tags rather than in resource names; see the
 ```
 bicep-modules/
 ├── modules/
-│   └── naming/
-│       ├── naming.bicep        (hand-written: naming functions and namingContext type)
-│       ├── rules.bicep         (generated: resource type keys and per-type rules)
-│       ├── regions.bicep       (generated: Azure region abbreviations)
+│   ├── naming/
+│   │   ├── naming.bicep        (hand-written: naming functions and namingContext type)
+│   │   ├── rules.bicep         (generated: resource type keys and per-type rules)
+│   │   ├── README.md           (hand-written: API and usage docs)
+│   │   └── resource-types.md   (generated: resource type catalogue)
+│   └── regions/
+│       ├── regions.bicep       (hand-written: region functions)
+│       ├── regions-data.bicep  (generated: Azure region abbreviations)
+│       ├── regions-info.bicep  (generated: curated paired regions and geographies)
 │       ├── README.md           (hand-written: API and usage docs)
-│       ├── resource-types.md   (generated: resource type catalogue)
-│       └── regions.md          (generated: region abbreviation catalogue)
+│       ├── regions.md          (generated: region abbreviation catalogue)
+│       └── regions-info.md     (generated: paired region and geography catalogue)
 ├── scripts/
-│   └── generate.py             (regenerates the generated files above)
+│   ├── generate.py             (regenerates the abbreviation and rule files above)
+│   └── generate_regions.py     (regenerates the curated paired-region and geography files)
 ├── tests/
 │   ├── naming.test.bicep       (using-target for the unit tests; boundary smoke template)
 │   ├── naming.test.bicepparam  (unit tests: one naming assertion per parameter)
 │   ├── naming.test.expected.json (golden results the assertions must produce)
-│   ├── compare.py              (diffs compiled parameters against the golden file)
+│   ├── regions.test.bicep      (using-target for the unit tests; boundary smoke template)
+│   ├── regions.test.bicepparam (unit tests: one regions assertion per parameter)
+│   ├── regions.test.expected.json (golden results the assertions must produce)
+│   ├── compare.py              (diffs compiled parameters against the golden files)
 │   ├── negative.py             (runs the negative compile tests)
 │   └── negative/               (invalid inputs that must fail to build)
 ├── bicepconfig.json
 └── .github/workflows/publish.yml
 ```
 
-`naming.bicep` imports the generated data files and re-exports the combined
-surface; publishing compiles the three files into a single self-contained
-artifact. CI regenerates the generated files and fails on drift.
+`naming.bicep` and `regions.bicep` import the generated data files and
+re-export the combined surface; publishing compiles each module with its
+imports into a single self-contained artifact. CI regenerates the generated
+files and fails on drift.
 
 ## Testing
 
