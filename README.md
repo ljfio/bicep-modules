@@ -58,7 +58,7 @@ required for non-Azure registries such as ghcr.io):
 Then import the naming functions:
 
 ```bicep
-import * as naming from 'br/ljfio:naming:0.1.0'
+import * as naming from 'br/ljfio:naming:0.2.0'
 
 var segments = ['contoso', 'demo', 'uksouth', 'shared']
 
@@ -102,7 +102,7 @@ module api 'modules/api.bicep' = {
 
 ```bicep
 // modules/api.bicep
-import * as naming from 'br/ljfio:naming:0.1.0'
+import * as naming from 'br/ljfio:naming:0.2.0'
 
 param namingContext naming.namingContext
 
