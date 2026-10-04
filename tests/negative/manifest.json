@@ -1,5 +1,6 @@
 {
   "context-missing-workload.bicep": "workload",
   "context-typo.bicep": "worklod",
+  "dns-unknown-zone-key.bicep": "storage_account_nfs",
   "unknown-type-key.bicep": "storage_acount"
 }
