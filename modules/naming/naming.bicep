@@ -25,6 +25,36 @@ type namingContext = {
   component: string?
 }
 
+@description('Override object for `mergeContext`: every key of `namingContext` is optional, including `workload`. The type is sealed, so unknown keys fail at build time. A key that is absent or null keeps the base value; a key set to an empty string removes that segment from the merged context.')
+@sealed()
+@export()
+type namingContextOverride = {
+  @description('Overrides the base `organization` segment.')
+  organization: string?
+
+  @description('Overrides the base `workload` segment.')
+  workload: string?
+
+  @description('Overrides the base `environment` segment.')
+  environment: string?
+
+  @description('Overrides the base `region` segment; accepts any Azure region form.')
+  region: string?
+
+  @description('Overrides the base `component` segment.')
+  component: string?
+}
+
+@description('Merges a base naming context with a set of overrides, returning a new naming context: each key of the override object replaces the base value when set, and keeps the base value when absent or null. Set a key to an empty string to remove that segment from the merged context. Use it to define a base context once (for example per workload) and vary it per deployment or per nested module (for example only the environment) without rebuilding the whole context at each call site.')
+@export()
+func mergeContext(base namingContext, overrides namingContextOverride) namingContext => {
+  organization: overrides.?organization ?? base.?organization
+  workload: overrides.?workload ?? base.workload
+  environment: overrides.?environment ?? base.?environment
+  region: overrides.?region ?? base.?region
+  component: overrides.?component ?? base.?component
+}
+
 @description('Resolves an Azure region to its short abbreviation. Accepts the AZ CLI name (`westeurope`), the dashed form (`west-europe`/`eu-west`) or the display name (`West Europe`), case insensitive. Anything that is not a known region passes through unchanged.')
 @export()
 func regionCode(region string) string =>

@@ -26,3 +26,15 @@ param contextComponentName = naming.resourceNameFrom('key_vault_vault', { worklo
 param contextOrganizationName = naming.resourceNameFrom('resource_group', { organization: 'platform', workload: 'contoso', region: 'uksouth' }, [])
 param contextNullExtrasName = naming.resourceNameFrom('site_web_app', { workload: 'contoso', environment: 'demo', region: 'uksouth' }, null)
 param contextSegments = naming.segmentsFrom({ workload: 'contoso', region: 'westeurope' })
+
+// mergeContext: overrides replace, absent/null keys keep the base value, and an
+// empty string clears the base segment.
+
+// The assignment type-checks against namingContext: mergeContext must return
+// a valid naming context. Override environment and region; keep organization,
+// workload, component from the base.
+param mergedContext = naming.mergeContext({ organization: 'platform', workload: 'contoso', environment: 'dev', region: 'uksouth', component: 'api' }, { environment: 'demo', region: 'westeurope' })
+param mergedContextName = naming.resourceNameFrom('site_web_app', naming.mergeContext({ workload: 'contoso', environment: 'dev', region: 'uksouth' }, { environment: 'demo', region: 'westeurope', component: 'api' }), null)
+param mergedContextSegments = naming.segmentsFrom(naming.mergeContext({ workload: 'contoso', environment: 'dev', region: 'uksouth' }, { environment: 'demo', region: 'westeurope' }))
+param mergedClearedEnvironmentName = naming.resourceNameFrom('resource_group', naming.mergeContext({ workload: 'contoso', environment: 'demo', region: 'uksouth' }, { environment: '' }), ['web'])
+param mergedNullOverrideKeepsBaseSegments = naming.segmentsFrom(naming.mergeContext({ workload: 'contoso', region: 'westeurope' }, { region: null }))

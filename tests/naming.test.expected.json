@@ -59,6 +59,34 @@
         "euw"
       ]
     },
+    "mergedContext": {
+      "value": {
+        "organization": "platform",
+        "workload": "contoso",
+        "environment": "demo",
+        "region": "westeurope",
+        "component": "api"
+      }
+    },
+    "mergedContextName": {
+      "value": "app-contoso-demo-euw-api"
+    },
+    "mergedContextSegments": {
+      "value": [
+        "contoso",
+        "demo",
+        "euw"
+      ]
+    },
+    "mergedClearedEnvironmentName": {
+      "value": "rg-contoso-uks-web"
+    },
+    "mergedNullOverrideKeepsBaseSegments": {
+      "value": [
+        "contoso",
+        "euw"
+      ]
+    },
     "noLimitTypeName": {
       "value": "cldcontosodemouks"
     },
